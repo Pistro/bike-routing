@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	{% load staticfiles %}
+	{% load leaflet_tags %}
+	{% leaflet_js %}
+	{% leaflet_css %}
+	<link rel="stylesheet" type="text/css" href="{% static 'showRoutes/style.css' %}" />
+	<script type="text/javascript" src="{% static 'showRoutes/d3.v3.min.js' %}"></script>
+	<script type="text/javascript">
+		var file = {{routeString|safe}};
+	</script>
+</head>
+
+<body>
+<div id="leftPanel">
+	<script type="text/javascript" src="{% static 'showRoutes/treeMap.js' %}"></script>
+	{% leaflet_map "yourmap" callback="window.map_init_basic" %}
+</div>
+<div id="rightPanel">
+	<h2 id=treeTitle></h2>
+	<div id=treeInfo>WTF, man?</div>	
+	<h2>Way Details</h2>
+	<div id=details>No way selected.</div>
+</div>
+</body>
+<script type="text/javascript" src="{% static 'showRoutes/treeText.js' %}"></script>
+</html>

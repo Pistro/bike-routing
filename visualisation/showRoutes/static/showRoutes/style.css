@@ -1,0 +1,91 @@
+* {
+	font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+html, body {
+    width: 100%;
+    height: 100%;
+}
+.h1 {
+	padding-left: 10px;
+	height: 40px;
+}
+#full {
+    position: absolute;
+    top: 40px;
+    bottom: 0;
+    width: 100%;
+}
+#panel1{
+    position: absolute;
+    height: 100%;
+    width: 50%;
+}
+#panel2 {
+    position: absolute;
+    left: 50%;
+    height: 100%;
+    width: 50%;
+}
+#leftPanel {
+    position: absolute;
+    height: 100%;
+    width: 70%;
+}
+#rightPanel {
+    position: absolute;
+    left: 70%;
+    height: 100%;
+    width: 30%;
+}
+#panel2top {
+    height: 50%;
+}
+#panel2bottom {
+	padding: 10px;
+    height: 50%;
+}
+#panel2first {
+    height: 30%;
+}
+#panel2second {
+    height: 30%;
+}
+#panel2third {
+	padding: 10px;
+    height: 40%;
+}
+
+.leaflet-container {  /* all maps */
+    width:  100%;
+    height: 100%;
+}
+
+#linegraph {
+    height: 100%;
+    width:  100%;
+}
+#linegraph2 {
+    height: 100%;
+    width:  100%;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: #777;
+    shape-rendering: crispEdges;
+}       
+.axis text {
+    font-family: 'Arial';
+    font-size: 13px;
+}
+.tick {
+    stroke-dasharray: 1, 2;
+}
+.bar {
+    fill: FireBrick;
+}
+.label {
+	font-style: italic;
+}

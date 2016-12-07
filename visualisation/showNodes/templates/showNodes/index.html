@@ -1,0 +1,56 @@
+<html>
+<head>
+  {% load staticfiles %}
+  {% load leaflet_tags %}
+  {% leaflet_js %}
+  {% leaflet_css %}
+  <link rel="stylesheet" type="text/css" href="{% static 'showNodes/style.css' %}" />
+  <script type="text/javascript" src="{% static 'showNodes/rbush.js' %}"></script>
+  <script type="text/javascript" src="{% static 'showNodes/index.js' %}"></script>
+</head>
+<body>
+<div id="title">
+  <div class="center-vertical">
+    <h1>Nodes</h1>
+  </div>
+</div>
+<div id="full">
+<div id="leftPanel">
+  {% leaflet_map "yourmap" callback="window.map_init_basic" %}
+</div>
+<div id="rightPanel">
+<div class="margin">
+  <h2> Config </h2>
+  <form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
+    <fieldset>
+      <input type='file' id='fileinput' accept=".json">
+      <input type='button' id='btnLoad' value='Load' onclick='loadFile();'>
+    </fieldset>
+  </form>
+  <div id=colorpanel>
+    <div id=colorbar></div>
+	<div id=colorlegend>
+      <div id=minBound>0</div><div id=scoreAttr>probability</div><div id=maxBound>1</div>
+	</div>
+  </div>
+  <script type="text/javascript">
+    var nrSteps = 100;
+    for (var i = 0; i < nrSteps; ++i) {
+      colorbar.innerHTML += '<div class=colorsegment style="background-color:' + numberToColorHsl(i/(nrSteps-1), 0, 1) + '"></div>';
+    }
+  </script> 
+  <form id="scaleParam" name="scaleParam" enctype="multipart/form-data" method="post">
+    <fieldset>
+	  Best: <input type='number' id='maxScoreInput' value=1>
+      Worst: <input type='number' id='minScoreInput' value=0><br>
+      Attribute: <input type='text' id='scoreAttrInput' value=probability><br>
+      <input type='button' id='btnUpdate' value='Update' onclick='reinitializeMap();'>
+    </fieldset>
+  </form>
+  <h2> Details </h2>
+  <div id=details>No node selected.</div>
+</div>
+</div>
+</div>
+</body>
+</html>

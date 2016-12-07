@@ -1,0 +1,169 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package routing.graph;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import routing.graph.weights.WeightGetter;
+
+import java.util.*;
+
+/**
+ *
+ * @author Pieter
+ */
+public class Path {
+    private Node start;
+    private final LinkedList<Edge> edges;
+    private final HashMap<String, String> tags;
+    private final LinkedList<Node> markPoints;
+
+    public Path(Node start, LinkedList<Edge> edges) {
+        this.start = start;
+        this.edges = edges;
+        this.tags = new HashMap<>();
+        this.markPoints = new LinkedList<>();
+    }
+    public Path(Node start) {
+        this.start = start;
+        this.edges = new LinkedList<>();
+        this.tags = new HashMap<>();
+        this.markPoints = new LinkedList<>();
+    }
+    public Path(Path p) {
+        this.start = p.start;
+        this.edges = new LinkedList<>(p.edges);
+        this.tags = new HashMap<>(p.tags);
+        this.markPoints = new LinkedList<>(p.markPoints);
+    }
+    public void flipForward() {
+        if (edges.isEmpty()) return;
+        Collections.reverse(edges);
+        start = edges.getFirst().getStart();
+    }
+    public void addMarkpoint(Node n) { markPoints.add(n); }
+    public void trim(int i) {
+        while (this.edges.size()>i) edges.removeLast();
+    }
+    public void trim(Node n) {
+        while (edges.getLast().getStop()!=n) {
+            edges.removeLast();
+        }
+    }
+    public void addEdge(Edge e) {
+        edges.add(e);
+    }
+    public String addTag(String key, String value) {
+        return tags.put(key, value);
+    }
+    public Node getStart() {
+        return start;
+    }
+    public Node getEnd() { if (edges.isEmpty()) return start; else return edges.getLast().getStop(); }
+    public void setStart(Node start) {
+        this.start = start;
+    }
+    public LinkedList<Edge> getEdges() {
+        return edges;
+    }
+    public void addPath(Path p) {
+        if (getEnd() != p.start)
+            throw new IllegalArgumentException("Start of added path does not equals end of current path");
+        edges.addAll(p.edges);
+    }
+    public double getLength() { return getLength(edges.size()); }
+    public double getLength(int pos) {
+        double out = 0;
+        Iterator<Edge> it = edges.listIterator();
+        for (int i = 0; i<pos; i++) {
+            out += it.next().getLength();
+        }
+        return out;
+    }
+    public double getWeight(WeightGetter g) { return getWeight(g, edges.size()); }
+    public double getWeight(WeightGetter g, int pos) {
+        double out = 0;
+        Iterator<Edge> it = edges.listIterator();
+        for (int i = 0; i<pos; i++) {
+            out += g.getWeight(it.next());
+        }
+        return out;
+    }
+    public Node getNode(int pos) {
+        if (pos == 0) return start;
+        else return edges.get(pos-1).getStop();
+    }
+    public boolean isTour() {
+        return start == edges.getLast().getStop();
+    }
+    public JSONObject toJSON() {
+        JSONObject route = new JSONObject();
+        if (!tags.isEmpty()) {
+            JSONObject routeTags = new JSONObject();
+            routeTags.putAll(tags);
+            route.put("tags", routeTags);
+        }
+        Node st = (start instanceof SPGraph.NodePair)? ((SPGraph.NodePair) start).e : start;
+        route.put("startNode", st.getId());
+        JSONArray routeWays = new JSONArray();
+        for (Edge e : getEdges()) {
+            int [] shadow = e.shadow;
+            for (int i=0; i<shadow.length; i++) {
+                routeWays.add(shadow[i]);
+            }
+        }
+        route.put("ways", routeWays);
+        if (!markPoints.isEmpty()) {
+            JSONArray mPoints = new JSONArray();
+            for (Node n : markPoints) {
+                JSONObject point = new JSONObject();
+                point.put("lat", n.getLat());
+                point.put("lon", n.getLon());
+                mPoints.add(point);
+            }
+            route.put("markpoints", mPoints);
+        }
+        return route;
+    }
+    public String toString() {
+        String s = Long.toString(start.getId());
+        for (Edge e : edges) s += " --> " + e.getStop().getId();
+        return s;
+    }
+
+    public double getInterference(double strictness) {
+        double l = getLength();
+        // Scaling factors
+        double lonScale = start.getDistance(new SimpleNode(0L, start.getLat(), start.getLon() + 1, 0));
+        double latScale = start.getDistance(new SimpleNode(0L, start.getLat() + 1, start.getLon(), 0));
+        // Calculate interference
+        double interference = 0;
+        double curPos = 0;
+        for (int i = 0; i<edges.size(); i++) {
+            Edge curEdge = edges.get(i);
+            curPos += curEdge.getLength()/2;
+            double curLat = (curEdge.getStart().getLat()+curEdge.getStop().getLat())/2;
+            double curLon = (curEdge.getStart().getLon()+curEdge.getStop().getLon())/2;
+            // Compare current edge with predecessors
+            double compPos = 0;
+            for (int j=0; j<i; j++) {
+                Edge compEdge = edges.get(j);
+                compPos += compEdge.getLength()/2;
+                double compLat = (compEdge.getStart().getLat()+compEdge.getStop().getLat())/2;
+                double compLon = (compEdge.getStart().getLon()+compEdge.getStop().getLon())/2;
+                double lonDif = lonScale*(curLon-compLon);
+                double latDif = latScale*(curLat-compLat);
+                double dist = Math.sqrt(lonDif*lonDif+latDif*latDif);
+                double frac = Math.min(curPos-compPos, l-curPos+compPos);
+                double expectedDist = 2*frac*strictness/Math.PI;
+                if (dist<expectedDist) interference += (expectedDist-dist)/expectedDist*curEdge.getLength()*compEdge.getLength();
+                compPos += compEdge.getLength()/2;
+            }
+            curPos += curEdge.getLength()/2;
+        }
+        return interference;
+    }
+}

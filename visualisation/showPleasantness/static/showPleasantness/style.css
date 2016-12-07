@@ -1,0 +1,89 @@
+* {
+	font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+html, body {
+    width: 100%;
+    height: 100%;
+}
+#title {
+    position: absolute;
+    top: 0px;
+    height: 40px;
+    width: 100%;
+}
+.center-vertical {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 5pt;
+}
+#full {
+    position: absolute;
+    top: 40px;
+    bottom: 0;
+    width: 100%;
+}
+.leaflet-container {  /* all maps */
+    width:  100%;
+    height: 100%;
+}
+fieldset {
+	border-style: none;
+}
+#leftPanel{
+    position: absolute;
+    height: 100%;
+    width: 70%;
+}
+#rightPanel{
+    position: absolute;
+    height: 100%;
+	left: 70%;
+    width: 30%;
+}
+.margin {
+    margin: 5pt;
+}
+input[type=number]{
+    width: 80px;
+}
+#colorpanel {
+    height: 70px;
+    width: 100%;
+	margin-top: 5px;
+	margin-bottom:5px;
+}
+#colorbar {
+    position: relative;
+    height: 40px;
+    width: 100%;
+}
+.colorsegment {
+    position: relative;
+    height: 100%;
+    width: 1%;
+	float: left;
+}
+#colorlegend {
+    position: relative;
+    height: 30px;
+    width: 100%;
+	text-align: center;
+}
+#minBound {
+    position: absolute;
+    top: 5px;
+	margin-left: 10px;
+}
+#maxBound {
+    position: absolute;
+    top: 5px;
+	right: 0px;
+	margin-right: 10px;
+}
+#scoreAttr {
+    top: 5px;
+    position: relative;
+}

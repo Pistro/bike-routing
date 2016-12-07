@@ -1,0 +1,13 @@
+/source
+/examples
+/source_old
+/papers
+/visualisation/showRoutes/fixtures
+__pycache__/
+META-INF/
+.idea/
+out/
+target/
+*.sqlite3
+*.iml
+*.pyc

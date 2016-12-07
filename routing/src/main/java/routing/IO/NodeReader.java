@@ -2,7 +2,6 @@ package routing.IO;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.xml.sax.helpers.DefaultHandler;
 import routing.graph.Graph;
 import routing.graph.Node;
 

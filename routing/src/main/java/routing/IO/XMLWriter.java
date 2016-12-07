@@ -6,7 +6,6 @@ package routing.IO;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.xml.sax.*;
 
 public class XMLWriter {
@@ -36,7 +35,7 @@ public class XMLWriter {
         if (attributes != null) {
             int nrAtt = attributes.getLength();
             for (int i = 0; i < nrAtt; i++){
-                lastLine += ' ' +  StringEscapeUtils.escapeXml10(attributes.getQName(i)) + "=\"" + StringEscapeUtils.escapeXml10(attributes.getValue(i)) + '"';
+                lastLine += ' ' + attributes.getQName(i) + "=\"" + attributes.getValue(i) + '"'; // TODO Escape unallowed xml characters
             }
         }
         lastLine += '>';
@@ -50,7 +49,7 @@ public class XMLWriter {
 
         if (attributes != null) {
             for (Map.Entry<String, String> en : attributes.entrySet()){
-                lastLine += ' ' +  StringEscapeUtils.escapeXml10(en.getKey()) + "=\"" + StringEscapeUtils.escapeXml10(en.getValue()) + '"';
+                lastLine += ' ' +  en.getKey() + "=\"" + en.getValue() + '"';  // TODO Escape unallowed xml characters
             }
         }
         lastLine += '>';

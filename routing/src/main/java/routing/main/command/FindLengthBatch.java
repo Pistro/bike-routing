@@ -121,6 +121,7 @@ public class FindLengthBatch extends Command {
                     double interference = lambda * p.getInterference(strictness) / p.getLength();
                     double score = weight + interference;
                     bestScore = Math.min(bestScore, score);
+                    p.addTag("length", Double.toString(p.getLength()));
                     p.addTag("weight", Double.toString(weight));
                     p.addTag("interf", Double.toString(interference));
                     p.addTag("score", Double.toString(score));

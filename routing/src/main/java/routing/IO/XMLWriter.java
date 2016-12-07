@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.xml.sax.*;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 public class XMLWriter {
     static String indentation = "";
@@ -35,7 +36,7 @@ public class XMLWriter {
         if (attributes != null) {
             int nrAtt = attributes.getLength();
             for (int i = 0; i < nrAtt; i++){
-                lastLine += ' ' + attributes.getQName(i) + "=\"" + attributes.getValue(i) + '"'; // TODO Escape unallowed xml characters
+                lastLine += ' ' +  StringEscapeUtils.escapeXml10(attributes.getQName(i)) + "=\"" + StringEscapeUtils.escapeXml10(attributes.getValue(i)) + '"';
             }
         }
         lastLine += '>';
@@ -49,7 +50,7 @@ public class XMLWriter {
 
         if (attributes != null) {
             for (Map.Entry<String, String> en : attributes.entrySet()){
-                lastLine += ' ' +  en.getKey() + "=\"" + en.getValue() + '"';  // TODO Escape unallowed xml characters
+                lastLine += ' ' +  StringEscapeUtils.escapeXml10(en.getKey()) + "=\"" + StringEscapeUtils.escapeXml10(en.getValue()) + '"';
             }
         }
         lastLine += '>';

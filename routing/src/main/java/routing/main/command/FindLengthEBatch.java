@@ -164,10 +164,10 @@ public class FindLengthEBatch extends Command {
                 double weight = p.getWeight(wb) / p.getLength();
                 double interference = lambda * p.getInterference(s) / p.getLength();
                 double score = weight + interference;
-                p.addTag("length", Double.toString(p.getLength()));
-                p.addTag("weight", Double.toString(weight));
-                p.addTag("interf", Double.toString(interference));
-                p.addTag("score", Double.toString(score));
+                p.addTag("length", p.getLength());
+                p.addTag("weight", weight);
+                p.addTag("interf", interference);
+                p.addTag("score", score);
                 output.put("route", p.toJSON());
             }
             result.put("configuration", configuration);

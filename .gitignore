@@ -1,8 +1,9 @@
+script.bat
 /source
 /examples
 /source_old
 /papers
-/classes
+classes/
 /visualisation/showRoutes/fixtures
 __pycache__/
 META-INF/
@@ -12,3 +13,4 @@ target/
 *.sqlite3
 *.iml
 *.pyc
+.ipynb_checkpoints/

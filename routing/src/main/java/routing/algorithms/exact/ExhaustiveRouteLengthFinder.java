@@ -421,11 +421,18 @@ public class ExhaustiveRouteLengthFinder {
                         compMinPos += compEdge.getLength()/2;
                         compMaxPos += compEdge.getLength()/2;
                     }
-                    double dist = dc.getDistance(curEdge, compEdge);
-                    if (curEdge instanceof ApproximateEdge) dist += ((ApproximateEdge) curEdge).dMax;
-                    if (compEdge instanceof ApproximateEdge) dist += ((ApproximateEdge) compEdge).dMax;
+                    double dist2 = dc.getDistance2(curEdge, compEdge);
                     double frac = Math.min(curMinPos - compMaxPos, Math.max(pLength+minCloseLength, minLength)-curMaxPos+compMinPos);
                     double expectedDist = 2*frac*s/Math.PI;
+                    double expextedDistDec = expectedDist;
+                    if (curEdge instanceof ApproximateEdge) expextedDistDec -= ((ApproximateEdge) curEdge).dMax;
+                    if (compEdge instanceof ApproximateEdge) expextedDistDec -= ((ApproximateEdge) compEdge).dMax;
+                    if (dist2<expextedDistDec*expextedDistDec) {
+                        double dist = dc.getDistance(curEdge, compEdge);
+                        if (curEdge instanceof ApproximateEdge) dist += ((ApproximateEdge) curEdge).dMax;
+                        if (compEdge instanceof ApproximateEdge) dist += ((ApproximateEdge) compEdge).dMax;
+                        if (dist<expectedDist) interference += (expectedDist-dist)/expectedDist*(curEdge.getLength()*compEdge.getLength());
+                    }
                     if (compEdge instanceof ApproximateEdge) {
                         compMinPos += compEdge.getLength()-((ApproximateEdge) compEdge).pMin;
                         compMaxPos += compEdge.getLength()-((ApproximateEdge) compEdge).pMax;
@@ -433,8 +440,6 @@ public class ExhaustiveRouteLengthFinder {
                         compMinPos += compEdge.getLength()/2;
                         compMaxPos += compEdge.getLength()/2;
                     }
-                    double inc = (expectedDist-dist)/expectedDist*(curEdge.getLength()*compEdge.getLength());
-                    if (dist<expectedDist) interference += inc;
                 }
                 if (curEdge instanceof ApproximateEdge) {
                     curMinPos += curEdge.getLength()-((ApproximateEdge) curEdge).pMin;
@@ -466,11 +471,16 @@ public class ExhaustiveRouteLengthFinder {
                     double frac = Math.min(e0.getLength()/2+returnLengths[edgeStops[i]]+compMinPos,
                             pLength-compMaxPos+pEndDist[edgeStarts[i]]+e0.getLength()/2);
                     double expectedDist = 2*frac*s/Math.PI;
-                    double dist = dc.getDistance(e, e0);
-                    if (e instanceof ApproximateEdge) dist += ((ApproximateEdge) e).dMax;
-                    if (dist<expectedDist) {
-                        double interf = (expectedDist-dist)/expectedDist*(e.getLength()*e0.getLength());
-                        weightIncs[i] += l*interf;
+                    double expectedDistDec = expectedDist;
+                    double dist2 = dc.getDistance2(e, e0);
+                    if (e instanceof ApproximateEdge) expectedDistDec -= ((ApproximateEdge) e).dMax;
+                    if (dist2<expectedDistDec*expectedDistDec) {
+                        double dist = dc.getDistance(e, e0);
+                        if (e instanceof ApproximateEdge) dist += ((ApproximateEdge) e).dMax;
+                        if (dist<expectedDist) {
+                            double interf = (expectedDist - dist) / expectedDist * (e.getLength() * e0.getLength());
+                            weightIncs[i] += l * interf;
+                        }
                     }
                 }
                 if (e instanceof ApproximateEdge) {

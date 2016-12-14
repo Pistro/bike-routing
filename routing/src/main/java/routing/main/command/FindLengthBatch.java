@@ -1,6 +1,5 @@
 package routing.main.command;
 
-import datastructure.EdgeRaster;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -8,19 +7,16 @@ import org.json.simple.parser.ParseException;
 import routing.IO.JsonWriter;
 import routing.IO.NodeReader;
 import routing.IO.NodeWriter;
-import routing.algorithms.candidateselection.Candidate;
 import routing.algorithms.candidateselection.CandidateSelector;
 import routing.algorithms.candidateselection.DistPlSelector;
 import routing.algorithms.heuristics.RouteLengthFinder;
 import routing.graph.*;
 import routing.graph.weights.WeightBalancer;
 import routing.main.ArgParser;
-import routing.main.command.Command;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -78,20 +74,13 @@ public class FindLengthBatch extends Command {
             SPGraph g2 = new SPGraph(g, reach, true, wb, wbReach);
             stop = System.currentTimeMillis();
             System.out.println("Hypergraph created! Creation time: " + 1.0 * (stop - start) / 1000 + "s");
-            System.out.println("Creating raster...");
-            start = System.currentTimeMillis();
-            LinkedList<Edge> edges = new LinkedList<>();
-            for (Node n : g.getNodes().values()) for (Edge e : n.getOutEdges()) edges.add(e);
-            EdgeRaster er = new EdgeRaster(edges, 1000);
-            stop = System.currentTimeMillis();
-            System.out.println("Raster created! Creation time: " + 1.0 * (stop - start) / 1000 + "s");
             int nr = 0;
             for (Map.Entry<Node, HashMap<String, Object>> en: nodeInfo.entrySet()) {
                 nr++;
                 System.out.println("Starting routing " + nr + "/" + nodeInfo.size() + " (length: " + minLength / 1000 + "-" + maxLength / 1000 + "km, " + alternatives + " attempts)...");
                 CandidateSelector cs = new DistPlSelector(en.getKey());
                 start = System.currentTimeMillis();
-                RouteLengthFinder rlf = new RouteLengthFinder(wb, en.getKey(), cs, minLength, maxLength, lambda, strictness, alternatives, g2, er);
+                RouteLengthFinder rlf = new RouteLengthFinder(wb, en.getKey(), cs, minLength, maxLength, lambda, strictness, alternatives, g2);
                 LinkedList<Path> paths = rlf.findRoutes();
                 stop = System.currentTimeMillis();
                 System.out.println("Routing finished " + nr + "/" + nodeInfo.size() + " (length: " + minLength / 1000 + "-" + maxLength / 1000 + "km, " + alternatives + " attempts)! Routing time: " + 1.0 * (stop - start) / 1000 + "s");
@@ -113,7 +102,6 @@ public class FindLengthBatch extends Command {
                 output.put("extractTime", rlf.extractionTime/1000.);
                 output.put("forwardTime", rlf.forwardTime/1000.);
                 output.put("backwardTimeAvg", rlf.backwardTime/(1000.*alternatives));
-                output.put("poisonTimeAvg", rlf.poisonTime/(1000.*alternatives));
                 JSONArray ps = new JSONArray();
                 double bestScore = Double.MAX_VALUE;
                 for (Path p : paths) {
@@ -121,10 +109,10 @@ public class FindLengthBatch extends Command {
                     double interference = lambda * p.getInterference(strictness) / p.getLength();
                     double score = weight + interference;
                     bestScore = Math.min(bestScore, score);
-                    p.addTag("length", Double.toString(p.getLength()));
-                    p.addTag("weight", Double.toString(weight));
-                    p.addTag("interf", Double.toString(interference));
-                    p.addTag("score", Double.toString(score));
+                    p.addTag("length", p.getLength());
+                    p.addTag("weight", weight);
+                    p.addTag("interf", interference);
+                    p.addTag("score", score);
                     ps.add(p.toJSON());
                 }
                 output.put("bestScore", bestScore);

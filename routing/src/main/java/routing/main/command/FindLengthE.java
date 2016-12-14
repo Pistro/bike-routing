@@ -73,9 +73,9 @@ public class FindLengthE extends Command {
             JSONObject j = new JSONObject();
             double weight = p.getWeight(wb) / p.getLength();
             double interference = lambda * p.getInterference(s) / p.getLength();
-            p.addTag("weightE", Double.toString(weight));
-            p.addTag("interfE", Double.toString(interference));
-            p.addTag("scoreE", Double.toString(weight + interference));
+            p.addTag("weight", weight);
+            p.addTag("interf", interference);
+            p.addTag("score", weight + interference);
             JSONArray routes = new JSONArray();
             routes.add(p.toJSON());
             j.put("routes", routes);

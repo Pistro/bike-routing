@@ -7,6 +7,8 @@ package routing.graph;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import routing.algorithms.heuristics.DistanceCalculator;
+import routing.graph.weights.PoisonedWeightGetter;
 import routing.graph.weights.WeightGetter;
 
 import java.util.*;
@@ -18,7 +20,7 @@ import java.util.*;
 public class Path {
     private Node start;
     private final LinkedList<Edge> edges;
-    private final HashMap<String, String> tags;
+    private final HashMap<String, Object> tags;
     private final LinkedList<Node> markPoints;
 
     public Path(Node start, LinkedList<Edge> edges) {
@@ -56,7 +58,7 @@ public class Path {
     public void addEdge(Edge e) {
         edges.add(e);
     }
-    public String addTag(String key, String value) {
+    public Object addTag(String key, Object value) {
         return tags.put(key, value);
     }
     public Node getStart() {
@@ -137,29 +139,28 @@ public class Path {
     public double getInterference(double strictness) {
         double l = getLength();
         // Scaling factors
-        double lonScale = start.getDistance(new SimpleNode(0L, start.getLat(), start.getLon() + 1, 0));
-        double latScale = start.getDistance(new SimpleNode(0L, start.getLat() + 1, start.getLon(), 0));
+        DistanceCalculator dc = new DistanceCalculator(start);
         // Calculate interference
         double interference = 0;
         double curPos = 0;
-        for (int i = 0; i<edges.size(); i++) {
-            Edge curEdge = edges.get(i);
+        Iterator<Edge> it = edges.iterator();
+        while(it.hasNext()) {
+            Edge curEdge = it.next();
             curPos += curEdge.getLength()/2;
-            double curLat = (curEdge.getStart().getLat()+curEdge.getStop().getLat())/2;
-            double curLon = (curEdge.getStart().getLon()+curEdge.getStop().getLon())/2;
             // Compare current edge with predecessors
             double compPos = 0;
-            for (int j=0; j<i; j++) {
-                Edge compEdge = edges.get(j);
+            Iterator<Edge> it2 = edges.iterator();
+            while(it2.hasNext()) {
+                Edge compEdge = it2.next();
+                if (compEdge==curEdge) break;
                 compPos += compEdge.getLength()/2;
-                double compLat = (compEdge.getStart().getLat()+compEdge.getStop().getLat())/2;
-                double compLon = (compEdge.getStart().getLon()+compEdge.getStop().getLon())/2;
-                double lonDif = lonScale*(curLon-compLon);
-                double latDif = latScale*(curLat-compLat);
-                double dist = Math.sqrt(lonDif*lonDif+latDif*latDif);
-                double frac = Math.min(curPos-compPos, l-curPos+compPos);
-                double expectedDist = 2*frac*strictness/Math.PI;
-                if (dist<expectedDist) interference += (expectedDist-dist)/expectedDist*curEdge.getLength()*compEdge.getLength();
+                    double frac = Math.min(curPos-compPos, l-curPos+compPos);
+                    double dist2 = dc.getDistance2(curEdge, compEdge);
+                    double expectedDist = 2*frac*strictness/Math.PI;
+                    if (dist2<expectedDist*expectedDist) {
+                        double dist = dc.getDistance(curEdge, compEdge);
+                        interference += (expectedDist-dist)/expectedDist*curEdge.getLength()*compEdge.getLength();
+                    }
                 compPos += compEdge.getLength()/2;
             }
             curPos += curEdge.getLength()/2;

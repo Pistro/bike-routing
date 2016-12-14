@@ -1,27 +1,16 @@
 package routing.algorithms.heuristics;
 
-import datastructure.EdgeRaster;
-import datastructure.IntPair;
-import jdk.nashorn.internal.ir.debug.JSONWriter;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import routing.IO.JsonWriter;
-import routing.algorithms.candidateselection.CandidateSelector;
-import routing.algorithms.exact.Dijkstra;
-import routing.algorithms.candidateselection.Candidate;
+import routing.algorithms.candidateselection.*;
 import routing.graph.*;
-import routing.graph.weights.*;
+import routing.graph.weights.PoisonedWeightGetter;
+import routing.graph.weights.WeightBalancer;
 
-import java.io.IOException;
 import java.util.*;
 
-/**
- * Created by pieter on 23/11/2015.
- */
 public class RouteLengthFinder {
-    private final DistanceCalculator dc;
     private final SPGraph.NodePair start;
-    private final EdgeRaster er;
     private final HashMap<Node, LinkedList<Edge>> nearbyNodes;
     private final static double beta = 0.6;
     private final static double epsilon = 0.00001;
@@ -38,9 +27,8 @@ public class RouteLengthFinder {
     public long extractionTime;
     public long forwardTime;
     public long backwardTime = 0;
-    public long poisonTime = 0;
 
-    public RouteLengthFinder(WeightBalancer wb, Node start, CandidateSelector cs, double minLength, double maxLength, double lambda, double strictness, int nrAttempts, SPGraph hyper, EdgeRaster er) {
+    public RouteLengthFinder(WeightBalancer wb, Node start, CandidateSelector cs, double minLength, double maxLength, double lambda, double strictness, int nrAttempts, SPGraph hyper) {
         long go = System.nanoTime();
         this.nearbyNodes = hyper.getSubgraphFast(start);
         long stop = System.nanoTime();
@@ -56,8 +44,6 @@ public class RouteLengthFinder {
             }
         }
         this.start = st;
-        dc = new DistanceCalculator(start);
-        this.er = er;
         this.cs = cs;
         this.wb = wb;
         this.lambda = lambda;
@@ -70,9 +56,9 @@ public class RouteLengthFinder {
     public LinkedList<Path> findRoutes() {
         long go = System.nanoTime();
         ArrayList<Candidate> cands = forwardSearch();
-        cs.initialize(cands);
         long stop = System.nanoTime();
         forwardTime = (stop-go)/1000000;
+        cs.initialize(cands);
         //JSONObject jo = cs.toJSON();
         //JsonWriter jw = new JsonWriter(jo);
         //jw.write("nodes.json");
@@ -80,17 +66,13 @@ public class RouteLengthFinder {
         LinkedList<Path> paths = new LinkedList<>();
         for (Candidate c: candidates) {
             Path forward = c.node.getPathFromRoot();
-            go = System.nanoTime();
-            WeightGetter wg = getWeightGetter(forward);
-            stop = System.nanoTime();
-            poisonTime += stop-go;
+            PoisonedWeightGetter wg = new PoisonedWeightGetter(forward, maxLength, wb, lambda, strictness, 0.8);
             go = System.nanoTime();
             Path p = closeTour(forward, wg);
             stop = System.nanoTime();
             backwardTime += stop-go;
             if (p!=null) paths.add(p);
         }
-        poisonTime /= 1000000;
         backwardTime /= 1000000;
         return paths;
     }
@@ -159,8 +141,9 @@ public class RouteLengthFinder {
                 compPos += e0.getLength()/2;
                 double frac = Math.min(curPos-compPos, Math.max(curL+dc.getDistance(e.getStop(), start), minLength)-curPos+compPos);
                 double expectedDist = 2*frac*strictness/Math.PI;
-                double dist = dc.getDistance(e, e0);
-                if (dist<expectedDist) {
+                double dist2 = dc.getDistance2(e, e0);
+                if (dist2<expectedDist*expectedDist) {
+                    double dist = dc.getDistance(e, e0);
                     interf += (expectedDist-dist)/expectedDist*(e.getLength()*e0.getLength());
                 }
                 compPos += e0.getLength()/2;
@@ -173,7 +156,7 @@ public class RouteLengthFinder {
         return stopInfo;
     }
 
-    public Path closeTour(Path forwardPath, WeightGetter wg) {
+    public Path closeTour(Path forwardPath, PoisonedWeightGetter wg) {
         DistanceCalculator dc = new DistanceCalculator(start);
         // Create map with information of different points along the forward route
         HashMap<Node, PathInfo> stopInfo = collectPartialPathInfo(forwardPath);
@@ -182,7 +165,7 @@ public class RouteLengthFinder {
         LinkedList<Edge> stops = new LinkedList<>(forwardPath.getEdges());
         double forwardLength = 0;
         Node forwardStop = forwardPath.getStart();
-        while (forwardLength<beta*0.5*minLength && !stops.isEmpty()) {
+        while (forwardLength<beta*minLength/2 && !stops.isEmpty()) {
             Edge e = stops.poll();
             forwardLength += e.getLength();
             forwardStop = e.getStop();
@@ -194,44 +177,47 @@ public class RouteLengthFinder {
         for (Node n: ends) candidates.add(new Candidate(new Tree.TreeNode(tree.getRoot(), n, null), 0., 0.));
         double bestScore = Double.MAX_VALUE;
         Path bestPath = null;
-        double maxLen = 0;
         while(!candidates.isEmpty() && !stopInfo.isEmpty()) {
             Candidate curCan = candidates.poll();
             Node curNode = curCan.node.getNode();
-            if (!addedNodes.contains(curNode)) {
-                addedNodes.add(curNode);
+            if (addedNodes.add(curNode)) {
+                curCan.node.connect();
                 PathInfo curStopInfo = stopInfo.remove(curNode);
                 if (curStopInfo!=null) {
-                    maxLen = Math.max(maxLen, curStopInfo.length+curCan.length);
                     while (!stops.isEmpty() && !stopInfo.containsKey(forwardStop)) {
                         Edge e = stops.poll();
                         forwardLength += e.getLength();
                         forwardStop = e.getStop();
                     }
-                    if (minLength<=curStopInfo.length+curCan.length+epsilon && curStopInfo.length+curCan.length<=maxLength+epsilon && curCan.node.getEdgeFromParent().getStart()!=curStopInfo.penultimate) {
+                    if (minLength<=curStopInfo.length+curCan.length+epsilon && curStopInfo.length+curCan.length<=maxLength+epsilon &&
+                            (curCan.node.getEdgeFromParent()==null || curCan.node.getEdgeFromParent().getStart()!=curStopInfo.penultimate)) {
                         Path returnPath = curCan.node.getPathFromRoot();
                         returnPath.flipForward();
                         Path forwardPart = new Path(forwardPath);
                         forwardPart.trim(returnPath.getStart());
                         forwardPart.getEdges().addAll(returnPath.getEdges());
-                        double curScore = (forwardPart.getWeight(wb) + lambda*forwardPart.getInterference(strictness))/forwardPart.getLength();
-                        if (curScore<bestScore) {
-                            bestScore = curScore;
-                            bestPath = forwardPart;
+                        double curWeight = forwardPart.getWeight(wb)/forwardPart.getLength();
+                        if (curWeight<bestScore) {
+                            double interference = new InterferenceGraph(forwardPart, strictness, 0.9).getInterference();
+                            //double interference = forwardPart.getInterference(strictness);
+                            double curScore = curWeight + lambda*interference/forwardPart.getLength();
+                            if (curScore < bestScore) {
+                                bestScore = curScore;
+                                bestPath = forwardPart;
+                            }
                         }
                     }
                 }
-                if (curCan.length + forwardLength + dc.getDistance(curNode, forwardStop) <= maxLength+epsilon) { //
-                    // Add all the neighbours of current to toAdd and their id's to considered id's
-                    for (Edge e : curNode.getInEdges()) {
-                        Candidate tn = new Candidate(new Tree.TreeNode(curCan.node, e.getStart(), e), curCan.weight + wg.getWeight(e), curCan.length + e.getLength());
-                        while (tn.node.getNode().getInEdges().size()==1 && tn.length<=maxLength+epsilon) {
-                            e = tn.node.getNode().getInEdges().getFirst();
-                            tn = new Candidate(new Tree.TreeNode(tn.node, e.getStart(), e), tn.weight+wb.getWeight(e), tn.length + e.getLength());
-                        }
-                        if (!addedNodes.contains(e.getStart())) {
-                            candidates.add(tn);
-                        }
+                // Add all the neighbours of current to toAdd and their id's to considered id's
+                for (Edge e : curNode.getInEdges()) {
+                    Candidate tn = new Candidate(new Tree.TreeNode(curCan.node, e.getStart(), e), curCan.weight + wg.getWeight(e, curCan.length), curCan.length + e.getLength());
+                    while (tn.node.getNode().getInEdges().size()==1 && tn.length<=maxLength+epsilon) {
+                        e = tn.node.getNode().getInEdges().getFirst();
+                        tn = new Candidate(new Tree.TreeNode(tn.node, e.getStart(), e), tn.weight+wb.getWeight(e), tn.length + e.getLength());
+                    }
+                    if (!addedNodes.contains(e.getStart())) {
+                        double tourL = tn.length + dc.getDistance(e.getStart(), forwardStop)+forwardLength;
+                        if (tourL<=maxLength+epsilon) candidates.add(tn);
                     }
                 }
             }
@@ -239,95 +225,5 @@ public class RouteLengthFinder {
         return bestPath;
     }
 
-    private class ApproximateEdge extends Edge {
-        public final double pMin;
-        public final double pMax;
-        public final double dMax;
-        private ApproximateEdge(LinkedList<Edge> edges, double pMin) {
-            this.pMin = pMin;
-            // Start & end
-            Edge first = edges.getFirst();
-            Node start = first.getStart();
-            setStart(start);
-            Edge last = edges.getLast();
-            Node stop = last.getStop();
-            setStop(stop);
-            // dMax
-            double dMax = 0;
-            Node center = new SimpleNode((start.getLat()+stop.getLat())/2, (start.getLon()+stop.getLon())/2);
-            for (Edge e: edges) dMax = Math.max(dMax, dc.getDistance(e, center));
-            this.dMax = dMax;
-            // length
-            double l = 0;
-            for (Edge e: edges) l += e.getLength();
-            setLength(l);
-            // pMax
-            this.pMax = pMin + l - first.getLength()/2 - last.getLength()/2;
-        }
-        double getPAvg() { return (pMin+pMax)/2; }
-    }
 
-    public LinkedList<ApproximateEdge> getApproximation(Path p) {
-        double pLength = p.getLength();
-        double compPos = 0;
-        LinkedList<ApproximateEdge> pEdgesReduced = new LinkedList<>();
-        LinkedList<Edge> stored = new LinkedList<>();
-        if (p.getEdges().size()==0) {
-            System.out.println("lala");
-        }
-        double pMin = p.getEdges().getFirst().getLength()/2;
-        for (Edge e: p.getEdges()) {
-            compPos += e.getLength()/2;
-            stored.add(e);
-            Node start = stored.getFirst().getStart();
-            Node end = stored.getLast().getStop();
-            Node center = new SimpleNode((start.getLat()+end.getLat())/2, (start.getLon()+end.getLon())/2);
-            double dMax = 0;
-            for (Edge e0: stored) dMax = Math.max(dMax, dc.getDistance(e0, center));
-            double dExp = 2 * Math.min(pMin, pLength-compPos) * strictness / Math.PI;
-            double match = (dExp - dMax) / dExp;
-            if (match<0.5) {
-                stored.pop();
-                pEdgesReduced.add(new ApproximateEdge(stored, pMin));
-                stored.clear();
-                stored.add(e);
-                pMin = compPos;
-            }
-            compPos += e.getLength()/2;
-        }
-        if (!stored.isEmpty()) {
-            pEdgesReduced.add(new ApproximateEdge(stored, pMin));
-        }
-        return pEdgesReduced;
-    }
-
-    public WeightGetter getWeightGetter(Path p) {
-        double pLength = p.getLength();
-        double factor = Math.max(pLength/dc.getDistance(p.getStart(), p.getEnd()), 1.6);
-        // Simplify the path by joining edges
-        LinkedList<ApproximateEdge> approx = getApproximation(p);
-        IdWeightChanger wc = new IdWeightChanger(wb);
-        double s = 2*strictness/Math.PI;
-        double f = s/(1-s);
-        Set<IntPair> tiles = new HashSet<>();
-        for (ApproximateEdge e: approx) {
-            double d = f * Math.min(factor*dc.getDistance(e, p.getStart()) + e.getPAvg(), pLength - e.getPAvg() + factor*dc.getDistance(p.getEnd(), e)) - e.dMax;
-            tiles.addAll(er.getNeighbourTiles(e, d));
-        }
-        Set<Edge> neighbours = er.collectTiles(tiles);
-        for (Edge e0: neighbours) {
-            double interf = 0;
-            for (ApproximateEdge e: approx) {
-                double frac = Math.min(e0.getLength()/2+factor*dc.getDistance(e0.getStop(), p.getStart())+e.getPAvg(),
-                        pLength-e.getPAvg()+factor*dc.getDistance(p.getEnd(), e0.getStart())+e0.getLength()/2);
-                double expectedDist = 2*frac*strictness/Math.PI;
-                double dist = dc.getDistance(e, e0) + e.dMax;
-                if (dist<expectedDist) {
-                    interf += (expectedDist-dist)/expectedDist*(e.getLength()*e0.getLength());
-                }
-            }
-            if (interf!=0) wc.setEdgeWeight(e0, wc.getWeight(e0) + lambda*interf);
-        }
-        return wc;
-    }
 }

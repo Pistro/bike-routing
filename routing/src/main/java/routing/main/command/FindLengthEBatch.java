@@ -4,9 +4,12 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import routing.IO.JsonWriter;
 import routing.IO.NodeReader;
 import routing.IO.NodeWriter;
+import routing.IO.XMLSPGraphReader;
 import routing.algorithms.exact.*;
 import routing.graph.Graph;
 import routing.graph.Node;
@@ -14,7 +17,10 @@ import routing.graph.Path;
 import routing.graph.SPGraph;
 import routing.graph.weights.WeightBalancer;
 import routing.main.ArgParser;
+import routing.main.Main;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -25,16 +31,17 @@ import java.util.HashMap;
  */
 public class FindLengthEBatch extends Command {
     private WeightBalancer wb;
+    private WeightBalancer wbReach;
     private double minLength;
     private double maxLength;
     private double lambda;
     private double s;
     private String batchIn;
     private String out;
-    private double wbReach;
-    private double reach;
+    private String hyperIn;
     private long time;
     private int nrThreads;
+    private double reach;
 
     // Batch nodes
     private HashMap<Node, HashMap<String, Object>> nodeInfo;
@@ -42,7 +49,6 @@ public class FindLengthEBatch extends Command {
     private int nextNode = 0;
 
     // Graphs
-    private Graph g;
     private SPGraph hyper;
 
     public FindLengthEBatch() {}
@@ -58,13 +64,16 @@ public class FindLengthEBatch extends Command {
     protected void initialize(ArgParser ap) {
         // Required arguments
         batchIn = ap.getString("batchIn");
-        reach = ap.getLong("reach");
         minLength = ap.getDouble("minLength");
         maxLength = ap.getDouble("maxLength");
         out = ap.getString("out");
+        // Choice
+        hyperIn = ap.getString("hyperIn", null);
+        reach = ap.getDouble("reach", -1);
+        if (hyperIn==null && reach==-1) throw new IllegalArgumentException("Either reach or hyperIn should be specified!");
         // Optionals
         wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 0.5), ap.getDouble("wSafe", 0.5));
-        wbReach = ap.getDouble("wbReach", 0.5);
+        wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         s = ap.getDouble("s", 0.4);
         lambda = ap.getDouble("lambda", 0.01);
         time = ap.getLong("time", 60*60*1000);
@@ -79,7 +88,6 @@ public class FindLengthEBatch extends Command {
     }
 
     public void execute(Graph g) {
-        this.g = g;
         System.out.println("Reading & matching batch nodes...");
         try {
             long start = System.currentTimeMillis();
@@ -90,11 +98,23 @@ public class FindLengthEBatch extends Command {
             for (Node n: nodeInfo.keySet()) nodes[idx++] = n;
             long stop = System.currentTimeMillis();
             System.out.println("Nodes ready! Read & matching time: " + 1.0 * (stop - start) / 1000 + "s");
-            System.out.println("Creating hypergraph...");
-            start = System.currentTimeMillis();
-            hyper = new SPGraph(g, reach, false, wb, wbReach);
-            stop = System.currentTimeMillis();
-            System.out.println("Hypergraph created (" + hyper.getNodes().size() + " nodes)! Creation time: " + 1.0 * (stop - start) / 1000 + "s");
+            if (hyperIn!=null) {
+                start = System.currentTimeMillis();
+                XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
+                XMLSPGraphReader gr = new XMLSPGraphReader(g);
+                xmlReader.setContentHandler(gr);
+                xmlReader.parse(Main.convertToFileURL(hyperIn));
+                hyper = gr.getSpGraph();
+                stop = System.currentTimeMillis();
+                System.out.println("Hypergraph Read! Reading time: " + 1.0 * (stop - start) / 1000 + "s");
+                if (hyper.getBi()==true) System.out.println("Warning: Exact routing on a bidirectional graph is slow!");
+            } else {
+                System.out.println("Creating hypergraph...");
+                start = System.currentTimeMillis();
+                hyper = new SPGraph(g, reach, false, wbReach);
+                stop = System.currentTimeMillis();
+                System.out.println("Hypergraph created! Creation time: " + 1.0 * (stop - start) / 1000 + "s");
+            }
             System.out.println("Starting routing (length: " + minLength/1000 + "-" + maxLength/1000 + "km)...");
             Thread[] threads = new Thread[nrThreads];
             for(int i = 0; i < nrThreads; i++) {
@@ -122,6 +142,8 @@ public class FindLengthEBatch extends Command {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SAXException|ParserConfigurationException e) {
             e.printStackTrace();
         }
     }
@@ -151,7 +173,7 @@ public class FindLengthEBatch extends Command {
             JSONObject result = new JSONObject();
             JSONObject configuration = new JSONObject();
             configuration.put("algorithm", "exact");
-            configuration.put("reach", reach);
+            configuration.put("reach", hyper.getReach());
             configuration.put("minLength", minLength);
             configuration.put("maxLength", maxLength);
             configuration.put("strictness", s);

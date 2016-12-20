@@ -13,4 +13,5 @@ target/
 *.sqlite3
 *.iml
 *.pyc
+*.json
 .ipynb_checkpoints/

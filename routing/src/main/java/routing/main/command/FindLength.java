@@ -2,14 +2,21 @@ package routing.main.command;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import routing.IO.JsonWriter;
+import routing.IO.XMLSPGraphReader;
 import routing.algorithms.candidateselection.CandidateSelector;
 import routing.algorithms.candidateselection.DistPlSelector;
 import routing.algorithms.heuristics.RouteLengthFinder;
 import routing.graph.*;
 import routing.graph.weights.WeightBalancer;
 import routing.main.ArgParser;
+import routing.main.Main;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.IOException;
 import java.util.LinkedList;
 
 /**
@@ -17,6 +24,7 @@ import java.util.LinkedList;
  */
 public class FindLength extends Command {
     private WeightBalancer wb;
+    private WeightBalancer wbReach;
     private long startId;
     private double minLength;
     private double maxLength;
@@ -24,8 +32,8 @@ public class FindLength extends Command {
     private String out;
     private double lambda;
     private double strictness;
+    private String hyperIn;
     private double reach;
-    private double wbReach;
 
     public FindLength() {}
 
@@ -43,49 +51,71 @@ public class FindLength extends Command {
         minLength = ap.getDouble("minLength");
         maxLength = ap.getDouble("maxLength");
         out = ap.getString("out");
-        reach = ap.getLong("reach");
+        // Choice
+        hyperIn = ap.getString("hyperIn", null);
+        reach = ap.getDouble("reach", -1);
+        if (hyperIn==null && reach==-1) throw new IllegalArgumentException("Either reach or hyperIn should be specified!");
         // Optionals
         alternatives = (int) ap.getLong("alt", 8);
-        wb = new WeightBalancer(ap.getDouble("wFast", 0.33), ap.getDouble("wAttr", 0.33), ap.getDouble("wSafe", 0.33));
-        wbReach = ap.getDouble("wbReach", 0.5);
+        wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 0.5), ap.getDouble("wSafe", 0.5));
+        wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         lambda = ap.getDouble("lambda", 0.01);
         strictness = ap.getDouble("strictness", 0.4);
     }
 
     public void execute(Graph g) {
-        System.out.println("Extracting subgraph...");
-        long start = System.currentTimeMillis();
-        Graph g2 = g.getSubgraph(g.getNode(startId), maxLength);
-        long stop = System.currentTimeMillis();
-        System.out.println("Extraction finished! Extraction time: " + 1.0*(stop-start)/1000 + "s");
-        System.out.println("Creating hypergraph...");
-        start = System.currentTimeMillis();
-        SPGraph g3 = new SPGraph(g2, reach, true, wb, wbReach);
-        stop = System.currentTimeMillis();
-        System.out.println("Hypergraph created! Creation time: " + 1.0*(stop-start)/1000 + "s");
-        System.out.println("Starting routing (length: " + minLength/1000 + "-" + maxLength/1000 + "km, " + alternatives + " attempts)...");
-        CandidateSelector cs = new DistPlSelector(g2.getNode(startId));
-        RouteLengthFinder rlf = new RouteLengthFinder(wb, g2.getNode(startId), cs, minLength, maxLength, lambda, strictness, alternatives, g3);
-        start = System.currentTimeMillis();
-        LinkedList<Path> paths = rlf.findRoutes();
-        stop = System.currentTimeMillis();
-        System.out.println("Starting routing (length: " + minLength/1000 + "-" + maxLength/1000 + "km, " + alternatives + " attempts)! Routing time: " + 1.0*(stop-start)/1000 + "s");
-        System.out.println("Extraction time: " + rlf.extractionTime/1000. + "s");
-        System.out.println("Forward time: " + rlf.forwardTime/1000. + "s");
-        System.out.println("Backward time (avg): " + rlf.backwardTime/(1000.*alternatives) + "s");
-        System.out.println("Writing routes to '" + out + "'...");
-        JSONArray routes = new JSONArray();
-        for (Path p : paths) {
-            double weight = p.getWeight(wb)/p.getLength();
-            double interference = lambda*p.getInterference(strictness)/p.getLength();
-            p.addTag("weight", weight);
-            p.addTag("interf", interference);
-            p.addTag("score", weight+interference);
-            routes.add(p.toJSON());
+        try {
+            long start, stop;
+            SPGraph g2;
+            if (hyperIn!=null) {
+                System.out.println("Reading hypergraph...");
+                start = System.currentTimeMillis();
+                XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
+                XMLSPGraphReader gr = new XMLSPGraphReader(g);
+                xmlReader.setContentHandler(gr);
+                xmlReader.parse(Main.convertToFileURL(hyperIn));
+                g2 = gr.getSpGraph();
+                stop = System.currentTimeMillis();
+                System.out.println("Hypergraph Read! Reading time: " + 1.0 * (stop - start) / 1000 + "s");
+                if (g2.getBi()==true) System.out.println("Warning: Exact routing on a bidirectional graph is slow!");
+            } else {
+                System.out.println("Extracting subgraph...");
+                start = System.currentTimeMillis();
+                g = g.getSubgraph(g.getNode(startId), maxLength);
+                stop = System.currentTimeMillis();
+                System.out.println("Extraction finished! Extraction time: " + 1.0 * (stop - start) / 1000 + "s");
+                System.out.println("Creating hypergraph...");
+                start = System.currentTimeMillis();
+                g2 = new SPGraph(g, reach, true, wbReach);
+                stop = System.currentTimeMillis();
+                System.out.println("Hypergraph created! Creation time: " + 1.0 * (stop - start) / 1000 + "s");
+            }
+            System.out.println("Starting routing (length: " + minLength / 1000 + "-" + maxLength / 1000 + "km, " + alternatives + " attempts)...");
+            CandidateSelector cs = new DistPlSelector(g.getNode(startId));
+            RouteLengthFinder rlf = new RouteLengthFinder(wb, g.getNode(startId), cs, minLength, maxLength, lambda, strictness, alternatives, g2);
+            start = System.currentTimeMillis();
+            LinkedList<Path> paths = rlf.findRoutes();
+            stop = System.currentTimeMillis();
+            System.out.println("Starting routing (length: " + minLength / 1000 + "-" + maxLength / 1000 + "km, " + alternatives + " attempts)! Routing time: " + 1.0 * (stop - start) / 1000 + "s");
+            System.out.println("Extraction time: " + rlf.extractionTime / 1000. + "s");
+            System.out.println("Forward time: " + rlf.forwardTime / 1000. + "s");
+            System.out.println("Backward time (avg): " + rlf.backwardTime / (1000. * alternatives) + "s");
+            System.out.println("Writing routes to '" + out + "'...");
+            JSONArray routes = new JSONArray();
+            for (Path p : paths) {
+                double weight = p.getWeight(wb) / p.getLength();
+                double interference = lambda * p.getInterference(strictness) / p.getLength();
+                p.addTag("weight", weight);
+                p.addTag("interf", interference);
+                p.addTag("score", weight + interference);
+                routes.add(p.toJSON());
+            }
+            JSONObject j = new JSONObject();
+            j.put("routes", routes);
+            new JsonWriter(j).write(out);
+            System.out.println("Routes written!");
+        } catch (SAXException|ParserConfigurationException|IOException e) {
+            e.printStackTrace();
         }
-        JSONObject j = new JSONObject();
-        j.put("routes", routes);
-        new JsonWriter(j).write(out);
-        System.out.println("Routes written!");
     }
 }

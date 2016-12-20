@@ -4,16 +4,19 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import routing.IO.JsonWriter;
-import routing.IO.NodeReader;
-import routing.IO.NodeWriter;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import routing.IO.*;
 import routing.algorithms.candidateselection.CandidateSelector;
 import routing.algorithms.candidateselection.DistPlSelector;
 import routing.algorithms.heuristics.RouteLengthFinder;
 import routing.graph.*;
 import routing.graph.weights.WeightBalancer;
 import routing.main.ArgParser;
+import routing.main.Main;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -26,6 +29,7 @@ import java.util.Map;
  */
 public class FindLengthBatch extends Command {
     private WeightBalancer wb;
+    private WeightBalancer wbReach;
     private double minLength;
     private double maxLength;
     private double lambda;
@@ -33,7 +37,7 @@ public class FindLengthBatch extends Command {
     private String batchIn;
     private String out;
     private int alternatives;
-    private double wbReach;
+    private String hyperIn;
     private double reach;
 
     public FindLengthBatch() {}
@@ -52,11 +56,14 @@ public class FindLengthBatch extends Command {
         minLength = ap.getDouble("minLength");
         maxLength = ap.getDouble("maxLength");
         out = ap.getString("out");
-        reach = ap.getLong("reach");
+        // Choice
+        hyperIn = ap.getString("hyperIn", null);
+        reach = ap.getDouble("reach", -1);
+        if (hyperIn==null && reach==-1) throw new IllegalArgumentException("Either reach or hyperIn should be specified!");
         // Optionals
         alternatives = (int) ap.getLong("alt", 8);
         wb = new WeightBalancer(ap.getDouble("wFast", 0.33), ap.getDouble("wAttr", 0.33), ap.getDouble("wSafe", 0.33));
-        wbReach = ap.getDouble("wbReach", 0.5);
+        wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         lambda = ap.getDouble("lambda", 0.01);
         strictness = ap.getDouble("strictness", 0.4);
     }
@@ -69,11 +76,23 @@ public class FindLengthBatch extends Command {
             HashMap<Node, HashMap<String, Object>> nodeInfo = new NodeReader(g, (JSONArray) obj.get("nodes")).nodes;
             long stop = System.currentTimeMillis();
             System.out.println("Nodes ready! Read & matching time: " + 1.0 * (stop - start) / 1000 + "s");
-            System.out.println("Creating hypergraph...");
-            start = System.currentTimeMillis();
-            SPGraph g2 = new SPGraph(g, reach, true, wb, wbReach);
-            stop = System.currentTimeMillis();
-            System.out.println("Hypergraph created! Creation time: " + 1.0 * (stop - start) / 1000 + "s");
+            SPGraph g2;
+            if (hyperIn!=null) {
+                start = System.currentTimeMillis();
+                XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
+                XMLSPGraphReader gr = new XMLSPGraphReader(g);
+                xmlReader.setContentHandler(gr);
+                xmlReader.parse(Main.convertToFileURL(hyperIn));
+                g2 = gr.getSpGraph();
+                stop = System.currentTimeMillis();
+                System.out.println("Hypergraph Read! Reading time: " + 1.0 * (stop - start) / 1000 + "s");
+            } else {
+                System.out.println("Creating hypergraph...");
+                start = System.currentTimeMillis();
+                g2 = new SPGraph(g, reach, false, wbReach);
+                stop = System.currentTimeMillis();
+                System.out.println("Hypergraph created! Creation time: " + 1.0 * (stop - start) / 1000 + "s");
+            }
             int nr = 0;
             for (Map.Entry<Node, HashMap<String, Object>> en: nodeInfo.entrySet()) {
                 nr++;
@@ -91,7 +110,7 @@ public class FindLengthBatch extends Command {
                 JSONObject result = new JSONObject();
                 JSONObject configuration = new JSONObject();
                 configuration.put("algorithm", "heuristic");
-                configuration.put("reach", reach);
+                configuration.put("reach", g2.getReach());
                 configuration.put("minLength", minLength);
                 configuration.put("maxLength", maxLength);
                 configuration.put("strictness", strictness);
@@ -135,6 +154,8 @@ public class FindLengthBatch extends Command {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SAXException|ParserConfigurationException e) {
             e.printStackTrace();
         }
     }

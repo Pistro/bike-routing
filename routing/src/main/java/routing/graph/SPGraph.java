@@ -12,10 +12,18 @@ import java.util.*;
  * Created by pieter on 24/10/2016.
  */
 public class SPGraph extends Graph {
-    private final double reach;
+    private double reach;
     private static final double epsilon = 0.00001;
-    private final WeightGetter wg;
+    private WeightBalancer wg;
     private final NodePairSet hyperNodes;
+    private boolean bi;
+
+    public double getReach() { return reach; }
+    public void setReach(double reach) { this.reach = reach; }
+    public WeightBalancer getWeightBalancer() { return wg; }
+    public void setWeightBalancer(WeightBalancer wg) { this.wg = wg; }
+    public void setBi(boolean bi) { this.bi = bi; }
+    public boolean getBi() { return bi; }
 
     public NodePair getNodePair(Node start, Node stop) {
         return hyperNodes.getNodePair(start, stop);
@@ -31,7 +39,11 @@ public class SPGraph extends Graph {
         }
 
         private NodePair addNodePair(Node s, Node e) {
-            NodePair last = new NodePair(idCnt++, s, e);
+            return addNodePair(++idCnt, s, e);
+        }
+
+        private NodePair addNodePair(long id, Node s, Node e) {
+            NodePair last = new NodePair(id, s, e);
             NodePair lastHyper = pairs.get(last);
             if (lastHyper==null) {
                 gr.addNode(last);
@@ -42,7 +54,7 @@ public class SPGraph extends Graph {
         }
 
         private NodePair getNodePair(Node s, Node e) {
-            return pairs.get(new NodePair(idCnt++, s, e));
+            return pairs.get(new NodePair(0, s, e));
         }
         private NodePair getNodePair(NodePair np) {
             return pairs.get(np);
@@ -76,10 +88,16 @@ public class SPGraph extends Graph {
         }
     }
 
-    public SPGraph(Graph g, double reach, boolean bidirectional, WeightBalancer wb, double wbInfluence) {
+    public Node addNodePair(long id, Node s, Node e) {
+        return hyperNodes.addNodePair(id, s, e);
+    }
+
+    public SPGraph() { hyperNodes = new NodePairSet(this); }
+
+    public SPGraph(Graph g, double reach, boolean bidirectional, WeightBalancer wb) {
         this.reach = reach;
-        double sum = wb.getWAttr()+wb.getWFast()+wb.getWSafe();
-        this.wg = new WeightBalancer((1-wbInfluence)+wbInfluence*wb.getWFast()/sum, wbInfluence*wb.getWAttr()/sum, wbInfluence*wb.getWSafe()/sum);
+        this.wg = wb;
+        this.bi = bidirectional;
 
         // Construct hypergraph using every possible starting node
         hyperNodes = new NodePairSet(this);

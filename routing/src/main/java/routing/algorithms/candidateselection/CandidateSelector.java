@@ -36,6 +36,9 @@ public abstract class CandidateSelector {
     public LinkedList<Candidate> selectCandidates(int nr) {
         LinkedList<Candidate> out = new LinkedList<Candidate>();
         for (int i=0; i<nr; i++) {
+            //JSONObject jo = toJSON();
+            //JsonWriter jw = new JsonWriter(jo);
+            //jw.write("nodes_" + i + ".json");
             Candidate c = selectCandidate();
             if (c==null) break;
             else out.add(c);

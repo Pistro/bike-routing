@@ -31,10 +31,9 @@ public class Main {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("An input file is required. Pass an input file by specifying the '-in' option");
         }
-        Graph g = new Graph();
         Command [] commands = {new FindLength(), new FindLengthBatch(),
                                 new FindLCC(), new Contract(), new FindReach(), new FindReachFloyd(),
-                                new FindLengthE(), new SelectNodes(), new FindLengthEBatch() };
+                                new FindLengthE(), new SelectNodes(), new FindLengthEBatch(), new FindSPGraph() };
         Command c = null;
         for (Command com: commands) {
             if (com.getName().equals(a.getMethod())) {
@@ -54,14 +53,14 @@ public class Main {
         // Prepare the graph reader
         System.out.println("Reading graph...");
         XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
-        XMLGraphReader gr = new XMLGraphReader(g);
+        XMLGraphReader gr = new XMLGraphReader();
         if (!c.loadNodes()) gr.setDynamicNodes(true);
         xmlReader.setContentHandler(gr);
         long start = System.currentTimeMillis();
         xmlReader.parse(convertToFileURL(inPath));
         long stop = System.currentTimeMillis();
         System.out.println("Graph read! Read time: " + (stop - start) / 1000.0 + "s");
-        c.execute(g);
+        c.execute(gr.getGraph());
     }
 
     private static void printReachDistribution(Graph g, double maxReach) {

@@ -38,7 +38,7 @@ public class FindReach extends Command {
         maxLength = ap.getDouble("maxLength");
         out = ap.getString("out");
         in = Main.convertToFileURL(ap.getString("in"));
-        wb = new WeightBalancer(ap.getDouble("wFast", 0.25), ap.getDouble("wAttr", 0.25), ap.getDouble("wSafe", 0.25));
+        wb = new WeightBalancer(ap.getDouble("wFast", 0.5), ap.getDouble("wAttr", 0.25), ap.getDouble("wSafe", 0.25));
     }
 
     public void execute(Graph g) {

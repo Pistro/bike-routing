@@ -21,16 +21,14 @@ import routing.graph.SimpleNode;
  * @author piete
  */
 public class XMLGraphReader extends DefaultHandler {
-    private final Graph graph;
+    private final Graph graph = new Graph();
     private boolean keep = false;
     private final HashMap<String, String> curAttrs = new HashMap<String, String>();
     private final HashMap<String, String> curTags = new HashMap<String, String>();
     private final LinkedList<Integer> segments = new LinkedList<Integer>();
     private boolean dynamicNodes = false;
 
-    public XMLGraphReader (Graph g) {
-        this.graph = g;
-    }
+    public Graph getGraph() { return graph; }
     public void setDynamicNodes(boolean b) { this.dynamicNodes = b; }
     
     @Override

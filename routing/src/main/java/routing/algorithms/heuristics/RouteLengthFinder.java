@@ -118,40 +118,20 @@ public class RouteLengthFinder {
     public class PathInfo {
         Node penultimate;
         double length;
-        double weight;
-        public PathInfo(Node penultimate, double length, double weight) {
+        public PathInfo(Node penultimate, double length) {
             this.penultimate = penultimate;
-            this.weight = weight;
             this.length = length;
         }
     }
 
     public HashMap<Node, PathInfo> collectPartialPathInfo(Path p) {
-        DistanceCalculator dc = new DistanceCalculator(start);
         HashMap<Node, PathInfo> stopInfo = new HashMap<>();
         double curPos = 0;
-        double curWeight = 0;
         LinkedList<Edge> processedEdges = new LinkedList<>();
         for (Edge e : p.getEdges()) {
-            double curL = curPos+e.getLength();
-            curPos += e.getLength()/2;
-            double interf = 0;
-            double compPos = 0;
-            for (Edge e0: processedEdges) {
-                compPos += e0.getLength()/2;
-                double frac = Math.min(curPos-compPos, Math.max(curL+dc.getDistance(e.getStop(), start), minLength)-curPos+compPos);
-                double expectedDist = 2*frac*strictness/Math.PI;
-                double dist2 = dc.getDistance2(e, e0);
-                if (dist2<expectedDist*expectedDist) {
-                    double dist = dc.getDistance(e, e0);
-                    interf += (expectedDist-dist)/expectedDist*(e.getLength()*e0.getLength());
-                }
-                compPos += e0.getLength()/2;
-            }
-            curPos = curL;
-            curWeight += wb.getWeight(e) + lambda*interf;
+            curPos += e.getLength();
             processedEdges.add(e);
-            stopInfo.put(e.getStop(), new PathInfo(e.getStart(), curPos, curWeight));
+            stopInfo.put(e.getStop(), new PathInfo(e.getStart(), curPos));
         }
         return stopInfo;
     }
@@ -200,7 +180,7 @@ public class RouteLengthFinder {
                         if (curWeight<bestScore) {
                             double interference = new InterferenceGraph(forwardPart, strictness, 0.9).getInterference();
                             //double interference = forwardPart.getInterference(strictness);
-                            double curScore = curWeight + lambda*interference/forwardPart.getLength();
+                            double curScore = curWeight + (lambda*interference/forwardPart.getLength());
                             if (curScore < bestScore) {
                                 bestScore = curScore;
                                 bestPath = forwardPart;

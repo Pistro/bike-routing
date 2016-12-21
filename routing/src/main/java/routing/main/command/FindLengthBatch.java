@@ -64,7 +64,7 @@ public class FindLengthBatch extends Command {
         alternatives = (int) ap.getLong("alt", 8);
         wb = new WeightBalancer(ap.getDouble("wFast", 0.33), ap.getDouble("wAttr", 0.33), ap.getDouble("wSafe", 0.33));
         wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
-        lambda = ap.getDouble("lambda", 0.01);
+        lambda = ap.getDouble("lambda", 12);
         strictness = ap.getDouble("strictness", 0.4);
     }
 
@@ -75,7 +75,7 @@ public class FindLengthBatch extends Command {
             JSONObject obj = (JSONObject) new JSONParser().parse(new FileReader(batchIn));
             HashMap<Node, HashMap<String, Object>> nodeInfo = new NodeReader(g, (JSONArray) obj.get("nodes")).nodes;
             long stop = System.currentTimeMillis();
-            System.out.println("Nodes ready! Read & matching time: " + 1.0 * (stop - start) / 1000 + "s");
+            System.out.println("Nodes ready! Read & matching time: " + (stop-start)/1000. + "s");
             SPGraph g2;
             if (hyperIn!=null) {
                 start = System.currentTimeMillis();
@@ -85,24 +85,24 @@ public class FindLengthBatch extends Command {
                 xmlReader.parse(Main.convertToFileURL(hyperIn));
                 g2 = gr.getSpGraph();
                 stop = System.currentTimeMillis();
-                System.out.println("Hypergraph Read! Reading time: " + 1.0 * (stop - start) / 1000 + "s");
+                System.out.println("Hypergraph Read! Reading time: " + (stop-start)/1000. + "s");
             } else {
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
                 g2 = new SPGraph(g, reach, false, wbReach);
                 stop = System.currentTimeMillis();
-                System.out.println("Hypergraph created! Creation time: " + 1.0 * (stop - start) / 1000 + "s");
+                System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }
             int nr = 0;
             for (Map.Entry<Node, HashMap<String, Object>> en: nodeInfo.entrySet()) {
                 nr++;
-                System.out.println("Starting routing " + nr + "/" + nodeInfo.size() + " (length: " + minLength / 1000 + "-" + maxLength / 1000 + "km, " + alternatives + " attempts)...");
+                System.out.println("Starting routing " + nr + "/" + nodeInfo.size() + " (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)...");
                 CandidateSelector cs = new DistPlSelector(en.getKey());
                 start = System.currentTimeMillis();
                 RouteLengthFinder rlf = new RouteLengthFinder(wb, en.getKey(), cs, minLength, maxLength, lambda, strictness, alternatives, g2);
                 LinkedList<Path> paths = rlf.findRoutes();
                 stop = System.currentTimeMillis();
-                System.out.println("Routing finished " + nr + "/" + nodeInfo.size() + " (length: " + minLength / 1000 + "-" + maxLength / 1000 + "km, " + alternatives + " attempts)! Routing time: " + 1.0 * (stop - start) / 1000 + "s");
+                System.out.println("Routing finished " + nr + "/" + nodeInfo.size() + " (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)! Routing time: " + (stop-start)/1000. + "s");
 
                 HashMap<String, Object> map = en.getValue();
                 if (!map.containsKey("tag_results")) map.put("tag_results", new JSONArray());
@@ -148,7 +148,7 @@ public class FindLengthBatch extends Command {
             JsonWriter jw = new JsonWriter(nodes);
             jw.write(out);
             stop = System.currentTimeMillis();
-            System.out.println("Routes written! Writing time: " + 1.0 * (stop - start) / 1000 + "s");
+            System.out.println("Routes written! Writing time: " + (stop-start)/1000. + "s");
         } catch (ParseException e) {
             e.printStackTrace();
         } catch (FileNotFoundException e) {

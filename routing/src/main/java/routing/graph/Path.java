@@ -165,6 +165,8 @@ public class Path {
             }
             curPos += curEdge.getLength()/2;
         }
-        return interference;
+        double sqLen = 0;
+        for (Edge e: getEdges()) sqLen += e.getLength()*e.getLength();
+        return 2*interference/(l*l);
     }
 }

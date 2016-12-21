@@ -151,7 +151,7 @@ public class PoisonedWeightGetter {
         Square currentToStartSquare = new Square(current, currentToStart*strictness_prod);
         Square endToCurrentSquare = new Square(current, -currentToStart*strictness_prod);
         double interf = root.getInterference(current, currentToStartSquare, endToCurrentSquare);
-        return wg.getWeight(current) + lambda*interf;
+        return wg.getWeight(current) + 2*lambda*interf/lMax;
     }
 
     private class ApproximateEdge extends Edge {

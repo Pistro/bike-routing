@@ -179,8 +179,8 @@ public class RouteLengthFinder {
                         double curWeight = forwardPart.getWeight(wb)/forwardPart.getLength();
                         if (curWeight<bestScore) {
                             double interference = new InterferenceGraph(forwardPart, strictness, 0.9).getInterference();
-                            //double interference = forwardPart.getInterference(strictness);
-                            double curScore = curWeight + (lambda*interference/forwardPart.getLength());
+                            //double interference2 = forwardPart.getInterference(strictness);
+                            double curScore = curWeight + lambda*interference;
                             if (curScore < bestScore) {
                                 bestScore = curScore;
                                 bestPath = forwardPart;

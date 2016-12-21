@@ -75,7 +75,7 @@ public class FindLengthEBatch extends Command {
         wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 0.5), ap.getDouble("wSafe", 0.5));
         wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         s = ap.getDouble("s", 0.4);
-        lambda = ap.getDouble("lambda", 0.01);
+        lambda = ap.getDouble("lambda", 25);
         time = ap.getLong("time", 60*60*1000);
         nrThreads = ap.getInt("threads", 16);
     }
@@ -97,7 +97,7 @@ public class FindLengthEBatch extends Command {
             int idx = 0;
             for (Node n: nodeInfo.keySet()) nodes[idx++] = n;
             long stop = System.currentTimeMillis();
-            System.out.println("Nodes ready! Read & matching time: " + 1.0 * (stop - start) / 1000 + "s");
+            System.out.println("Nodes ready! Read & matching time: " + (stop-start)/1000. + "s");
             if (hyperIn!=null) {
                 start = System.currentTimeMillis();
                 XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
@@ -106,16 +106,16 @@ public class FindLengthEBatch extends Command {
                 xmlReader.parse(Main.convertToFileURL(hyperIn));
                 hyper = gr.getSpGraph();
                 stop = System.currentTimeMillis();
-                System.out.println("Hypergraph Read! Reading time: " + 1.0 * (stop - start) / 1000 + "s");
+                System.out.println("Hypergraph Read! Reading time: " + (stop-start)/1000. + "s");
                 if (hyper.getBi()==true) System.out.println("Warning: Exact routing on a bidirectional graph is slow!");
             } else {
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
                 hyper = new SPGraph(g, reach, false, wbReach);
                 stop = System.currentTimeMillis();
-                System.out.println("Hypergraph created! Creation time: " + 1.0 * (stop - start) / 1000 + "s");
+                System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }
-            System.out.println("Starting routing (length: " + minLength/1000 + "-" + maxLength/1000 + "km)...");
+            System.out.println("Starting routing (length: " + minLength/1000. + "-" + maxLength/1000. + "km)...");
             Thread[] threads = new Thread[nrThreads];
             for(int i = 0; i < nrThreads; i++) {
                 threads[i] = new Thread(new findLengthEThread());
@@ -133,7 +133,7 @@ public class FindLengthEBatch extends Command {
                 JsonWriter jw = new JsonWriter(nodes);
                 jw.write(out);
                 stop = System.currentTimeMillis();
-                System.out.println("Routes written! Writing time: " + 1.0 * (stop - start) / 1000 + "s");
+                System.out.println("Routes written! Writing time: " + (stop-start)/1000. + "s");
             } catch (InterruptedException e) {
                 System.out.println("Execution interrupted");
             }

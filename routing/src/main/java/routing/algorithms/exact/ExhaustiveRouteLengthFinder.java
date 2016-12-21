@@ -14,6 +14,8 @@ import java.util.*;
  * Created by Pieter Stroobant in September 2016.
  */
 public class ExhaustiveRouteLengthFinder {
+    static boolean debug = false;
+
     // Algorithmic parameters
     // ----------------------
     // Startnode (in the hypergraph)
@@ -163,7 +165,7 @@ public class ExhaustiveRouteLengthFinder {
         }
         if (maxMatch > 0.7) {
             // Set interference in merged edges
-            bestAe.inter = p.getInterference(strictness, bestPre, p.getEdges().size()-bestPost);
+            bestAe.inter = p.getUnscaledInterference(bestPre, p.getEdges().size()-bestPost);
             // Update p
             p = new ApproximatePath(bestP);
             p.getEdges().clear();
@@ -242,16 +244,16 @@ public class ExhaustiveRouteLengthFinder {
                         ar.add(ePath);
 
                         // Calculate the forward cost
-                        double eWeight = ePath.getWeight(wg) + lambda * ePath.getInterference(strictness);
-                        if (((SPGraph.NodePair)ePath.getEnd()).e == start.e && minLength < eLength && eWeight / eLength < bestScore && eLength!=0) {
+                        double eScore = ePath.getWeight(wg)/eLength + lambda*ePath.getUnscaledInterference()/(eLength*eLength);
+                        if (((SPGraph.NodePair)ePath.getEnd()).e == start.e && minLength < eLength && eScore < bestScore && eLength!=0) {
                             best = ePath;
-                            bestScore = eWeight / eLength;
+                            bestScore = eScore;
                         }
-                        double newScore = estimateScore(ePath, eWeight, eLength);
+                        double newScore = estimateScore(ePath);
                         /*if (newScore + 0.00001 < curScore) {// && bestMatch == null) {
-                            double curWeight = curPath.getWeight(wg) + lambda * curPath.getInterference();
-                            System.out.println(newScore + ">" + curScore + " wghtInc: " + (eWeight - curWeight) + " lenInc: " + (eLength - curLength));
-                            estimateScore(ePath, eWeight, eLength);
+                            System.out.println(newScore + ">" + curScore);
+                            LinkedList<NodeCostLen> clens = getBestEstimationPath(ePath);
+                            checkBestEstimationPath(curPath, clens);
                         }*/
                         if (newScore < bestScore) {
                             queue.add(new PathCost(ePath, newScore));
@@ -274,9 +276,13 @@ public class ExhaustiveRouteLengthFinder {
         }
     }
 
-    private double estimateScore(ApproximatePath p, double pWeight, double pLength) {
+    private double estimateScore(ApproximatePath p) {
+        double pWeight = p.getWeight(wg);
+        double pUnscaledInterf = p.getUnscaledInterference();
+        double pLength = p.getLength();
+        double pMinInterfScaled = lambda*(pUnscaledInterf/maxLength)/maxLength;
         // Adapt the graph
-        WeightGetter wc = p.getWeightGetter(strictness, lambda);
+        WeightGetter wc = p.getWeightGetter();
         // Return weights
         Dijkstra db = new Dijkstra(wc, false);
         for (Node n: hyperEnds) db.addStartNode(n);
@@ -292,10 +298,10 @@ public class ExhaustiveRouteLengthFinder {
             }
         }
         double minReturnWeight = returnWeights.get(p.getEnd()).w;
-        double bound1 = (minReturnWeight+pWeight)/maxLength;
+        double bound1 = (minReturnWeight+pWeight)/maxLength+pMinInterfScaled;
         // Forward weights
         Dijkstra df = new Dijkstra(wc, true);
-        df.addStartNode(start);
+        df.addStartNode(p.getEnd());
         df.extend(Double.MAX_VALUE);
         HashMap<Node, WgtLen> forwardWeights = new HashMap<>();
         for (Tree.TreeNodeDist tn : df.getTree().getTreeNodesInRange(-1, Double.MAX_VALUE)) {
@@ -312,9 +318,9 @@ public class ExhaustiveRouteLengthFinder {
         for (Map.Entry<Node, WgtLen> en: forwardWeights.entrySet()) {
             WgtLen forward = en.getValue();
             WgtLen backward = returnWeights.get(en.getKey());
-            double tourL = forward.l + backward.l, tourW = forward.w + backward.w;
+            double tourL = pLength + forward.l + backward.l, tourW = pWeight + forward.w + backward.w;
             if (minLength <= tourL && tourL <= maxLength && tourL != 0) {
-                bound2 = Math.min(bound2, tourW / tourL);
+                bound2 = Math.min(bound2, tourW/tourL+lambda*(pUnscaledInterf/tourL)/tourL);
             }
         }
         // Slow bound
@@ -329,7 +335,7 @@ public class ExhaustiveRouteLengthFinder {
                 double c = en.getValue();
                 SPGraph.NodePair np = (SPGraph.NodePair) en.getKey();
                 if (np.e==start.e && minLength<=nse.len && nse.len!=0) {
-                    bound2 = Math.min(bound2, c/nse.len);
+                    bound2 = Math.min(bound2, c/nse.len+lambda*(pUnscaledInterf/nse.len)/nse.len);
                 }
                 for (Edge e: en.getKey().getOutEdges()) {
                     int len = nse.len + (int) e.getLength();
@@ -340,7 +346,7 @@ public class ExhaustiveRouteLengthFinder {
                         cost += wc.getWeight(e);
                     }
                     if (len+returnLengths[nodeToIdx.get(e.getStop())]<=maxLength) {
-                        if ((cost + returnWeights.get(e.getStop()).w)/maxLength<bound2 && inventory.addWalk(e.getStop(), len, cost)) {
+                        if ((cost + returnWeights.get(e.getStop()).w)/maxLength+pMinInterfScaled<bound2 && inventory.addWalk(e.getStop(), len, cost)) {
                             schedule.add(e.getStop(), len);
                         }
                     }
@@ -390,11 +396,11 @@ public class ExhaustiveRouteLengthFinder {
             super(p);
         }
 
-        public double getInterference(double s) {
-            return getInterference(s, 0, getEdges().size());
+        public double getUnscaledInterference() {
+            return getUnscaledInterference(0, getEdges().size());
         }
 
-        private double getInterference(double s, int startI, int stopI) {
+        private double getUnscaledInterference(int startI, int stopI) {
             double pLength = getLength();
             double interference = 0;
             double curMinPos = 0, curMaxPos = 0;
@@ -403,7 +409,7 @@ public class ExhaustiveRouteLengthFinder {
             for (int i = startI; i<stopI; i++) {
                 Edge curEdge = pEdges.get(i);
                 if (curEdge instanceof ApproximateEdge) {
-                    interference += ((ApproximateEdge) curEdge).inter;
+                    interference += ((ApproximateEdge) curEdge).inter/2;
                     curMinPos += ((ApproximateEdge) curEdge).pMin;
                     curMaxPos += ((ApproximateEdge) curEdge).pMax;
                 } else {
@@ -423,7 +429,7 @@ public class ExhaustiveRouteLengthFinder {
                     }
                     double dist2 = dc.getDistance2(curEdge, compEdge);
                     double frac = Math.min(curMinPos - compMaxPos, Math.max(pLength+minCloseLength, minLength)-curMaxPos+compMinPos);
-                    double expectedDist = 2*frac*s/Math.PI;
+                    double expectedDist = 2*frac*strictness/Math.PI;
                     double expextedDistDec = expectedDist;
                     if (curEdge instanceof ApproximateEdge) expextedDistDec -= ((ApproximateEdge) curEdge).dMax;
                     if (compEdge instanceof ApproximateEdge) expextedDistDec -= ((ApproximateEdge) compEdge).dMax;
@@ -449,10 +455,10 @@ public class ExhaustiveRouteLengthFinder {
                     curMaxPos += curEdge.getLength()/2;
                 }
             }
-            return interference;
+            return 2*interference;
         }
 
-        private WeightChanger getWeightGetter(double s, double l) {
+        private WeightChanger getWeightGetter() {
             double [] pEndDist = forwardDistances(getEnd());
             double [] weightIncs = new double[edges.length];
             // Calculate interferences
@@ -470,7 +476,7 @@ public class ExhaustiveRouteLengthFinder {
                     Edge e0 = edges[i];
                     double frac = Math.min(e0.getLength()/2+returnLengths[edgeStops[i]]+compMinPos,
                             pLength-compMaxPos+pEndDist[edgeStarts[i]]+e0.getLength()/2);
-                    double expectedDist = 2*frac*s/Math.PI;
+                    double expectedDist = 2*frac*strictness/Math.PI;
                     double expectedDistDec = expectedDist;
                     double dist2 = dc.getDistance2(e, e0);
                     if (e instanceof ApproximateEdge) expectedDistDec -= ((ApproximateEdge) e).dMax;
@@ -479,7 +485,7 @@ public class ExhaustiveRouteLengthFinder {
                         if (e instanceof ApproximateEdge) dist += ((ApproximateEdge) e).dMax;
                         if (dist<expectedDist) {
                             double interf = (expectedDist - dist) / expectedDist * (e.getLength() * e0.getLength());
-                            weightIncs[i] += l * interf;
+                            weightIncs[i] += interf;
                         }
                     }
                 }
@@ -493,7 +499,9 @@ public class ExhaustiveRouteLengthFinder {
             }
             WeightChanger wc = new WeightChanger(wg);
             for (int i = 0; i<edges.length; i++) {
-                if (weightIncs[i]!=0) wc.setEdgeWeight(edges[i], wg.getWeight(edges[i])+weightIncs[i]);
+                if (weightIncs[i]!=0) {
+                    wc.setEdgeWeight(edges[i], wg.getWeight(edges[i])+2*lambda*weightIncs[i]/maxLength);
+                }
             }
             return wc;
         }

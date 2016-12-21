@@ -19,6 +19,7 @@ public class InterferenceGraph {
     public InterferenceGraph(Path p, double s, double t) {
         strictness = s;
         dc = new DistanceCalculator(p.getStart());
+        pLen = p.getLength();
         LinkedList<InterferenceNode> prevLevel = new LinkedList<>();
         InterferenceNode prevNode = null;
         double pos = 0;
@@ -31,7 +32,6 @@ public class InterferenceGraph {
         }
         lowerStart = prevLevel.getFirst();
         lowerStart.setLeft(prevLevel.getLast());
-        pLen = p.getLength();
         double d_req = 2000;
         while (d_req<pLen/2) {
             double dMaxBound = (1-t)*2*s/Math.PI*d_req;
@@ -135,7 +135,7 @@ public class InterferenceGraph {
             interference += getInterferenceFromNode(cur);
             cur = cur.right;
         }
-        return  interference;
+        return 2*interference/(pLen*pLen);
     }
     double getInterferenceFromNode(InterferenceNode in) {
         double interference = 0;

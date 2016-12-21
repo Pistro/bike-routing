@@ -59,7 +59,7 @@ public class FindLength extends Command {
         alternatives = (int) ap.getLong("alt", 8);
         wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 0.5), ap.getDouble("wSafe", 0.5));
         wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
-        lambda = ap.getDouble("lambda", 0.01);
+        lambda = ap.getDouble("lambda", 12);
         strictness = ap.getDouble("strictness", 0.4);
     }
 
@@ -76,27 +76,27 @@ public class FindLength extends Command {
                 xmlReader.parse(Main.convertToFileURL(hyperIn));
                 g2 = gr.getSpGraph();
                 stop = System.currentTimeMillis();
-                System.out.println("Hypergraph Read! Reading time: " + 1.0 * (stop - start) / 1000 + "s");
+                System.out.println("Hypergraph Read! Reading time: " + (stop-start)/1000. + "s");
                 if (g2.getBi()==true) System.out.println("Warning: Exact routing on a bidirectional graph is slow!");
             } else {
                 System.out.println("Extracting subgraph...");
                 start = System.currentTimeMillis();
                 g = g.getSubgraph(g.getNode(startId), maxLength);
                 stop = System.currentTimeMillis();
-                System.out.println("Extraction finished! Extraction time: " + 1.0 * (stop - start) / 1000 + "s");
+                System.out.println("Extraction finished! Extraction time: " + (stop-start)/1000. + "s");
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
                 g2 = new SPGraph(g, reach, true, wbReach);
                 stop = System.currentTimeMillis();
-                System.out.println("Hypergraph created! Creation time: " + 1.0 * (stop - start) / 1000 + "s");
+                System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }
-            System.out.println("Starting routing (length: " + minLength / 1000 + "-" + maxLength / 1000 + "km, " + alternatives + " attempts)...");
+            System.out.println("Starting routing (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)...");
             CandidateSelector cs = new DistPlSelector(g.getNode(startId));
             RouteLengthFinder rlf = new RouteLengthFinder(wb, g.getNode(startId), cs, minLength, maxLength, lambda, strictness, alternatives, g2);
             start = System.currentTimeMillis();
             LinkedList<Path> paths = rlf.findRoutes();
             stop = System.currentTimeMillis();
-            System.out.println("Starting routing (length: " + minLength / 1000 + "-" + maxLength / 1000 + "km, " + alternatives + " attempts)! Routing time: " + 1.0 * (stop - start) / 1000 + "s");
+            System.out.println("Starting routing (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)! Routing time: " + (stop-start)/1000. + "s");
             System.out.println("Extraction time: " + rlf.extractionTime / 1000. + "s");
             System.out.println("Forward time: " + rlf.forwardTime / 1000. + "s");
             System.out.println("Backward time (avg): " + rlf.backwardTime / (1000. * alternatives) + "s");
@@ -104,7 +104,7 @@ public class FindLength extends Command {
             JSONArray routes = new JSONArray();
             for (Path p : paths) {
                 double weight = p.getWeight(wb) / p.getLength();
-                double interference = lambda * p.getInterference(strictness) / p.getLength();
+                double interference = lambda * p.getInterference(strictness);
                 p.addTag("weight", weight);
                 p.addTag("interf", interference);
                 p.addTag("score", weight + interference);

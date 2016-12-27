@@ -19,6 +19,7 @@ public abstract class Node {
     private final Long id;
     private final LinkedList<Edge> outEdges = new LinkedList<Edge>();
     private final LinkedList<Edge> inEdges = new LinkedList<Edge>();
+    private double reach = -1;
 
     public void addOutEdge(Edge e) {
         outEdges.add(e);
@@ -32,9 +33,10 @@ public abstract class Node {
     public LinkedList<Edge> getInEdges() {
         return inEdges;
     }
-    public boolean hasReach() { return false; }
-    public double getReach() { throw new IllegalArgumentException("Tried to access non-existing reach!"); }
-    public void setReach(double d) { throw new IllegalArgumentException("Tried to set reach!"); }
+    public boolean hasReach() { return reach!=-1; }
+    public synchronized void setReach(double d) { if (d>reach) reach = d; }
+    public double getReach() { return reach; }
+    public void clearReach() { reach = -1; }
 
     public Node(Long id) { this.id = id; idCnt = Math.max(idCnt, id+1); }
     public Node() { this.id = idCnt++; }

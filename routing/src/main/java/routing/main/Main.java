@@ -31,7 +31,7 @@ public class Main {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("An input file is required. Pass an input file by specifying the '-in' option");
         }
-        Command [] commands = {new FindLength(), new FindLengthBatch(),
+        Command [] commands = {new FindLength(), new FindLengthBatch(), new CollectInfo(),
                                 new FindLCC(), new Contract(), new FindReach(), new FindReachFloyd(),
                                 new FindLengthE(), new SelectNodes(), new FindLengthEBatch(), new FindSPGraph() };
         Command c = null;

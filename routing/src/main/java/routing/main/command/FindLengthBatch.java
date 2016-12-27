@@ -47,7 +47,7 @@ public class FindLengthBatch extends Command {
     }
 
     public String getName() {
-        return "findLengthBatch";
+        return "lengthBatch";
     }
 
     protected void initialize(ArgParser ap) {

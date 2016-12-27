@@ -28,7 +28,7 @@ public class FindLCC extends Command {
     }
 
     public String getName() {
-        return "findLcc";
+        return "lcc";
     }
 
     protected void initialize(ArgParser ap) {

@@ -34,7 +34,7 @@ public class FindSPGraph extends Command{
     }
 
     public String getName() {
-        return "findSPGraph";
+        return "SPGraph";
     }
 
     protected void initialize(ArgParser ap) {

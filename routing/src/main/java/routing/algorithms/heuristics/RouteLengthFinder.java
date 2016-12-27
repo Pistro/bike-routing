@@ -1,5 +1,6 @@
 package routing.algorithms.heuristics;
 
+import jdk.nashorn.internal.ir.debug.JSONWriter;
 import org.json.simple.JSONObject;
 import routing.IO.JsonWriter;
 import routing.algorithms.candidateselection.*;
@@ -92,7 +93,7 @@ public class RouteLengthFinder {
             if (added.add(curN)) {
                 LinkedList<Edge> outEdges = nearbyNodes.get(curN);
                 if (outEdges==null) outEdges = curN.getOutEdges();
-                if (cur.length+dc.getDistance(curN, start)+epsilon>=minLength && outEdges.size()>1) candidates.add(cur);
+                if (dc.getDistance2(curN, start)+epsilon>=(minLength-cur.length)*(minLength-cur.length) && outEdges.size()>1) candidates.add(cur);
                 for (Edge e: outEdges) {
                     Candidate cn = new Candidate(new Tree.TreeNode(cur.node, e.getStop(), e), cur.weight+wb.getWeight(e), cur.length + e.getLength());
                     LinkedList<Edge> cnOutEdges = nearbyNodes.get(cn.node.getNode());
@@ -106,8 +107,13 @@ public class RouteLengthFinder {
                     }
                     if (!added.contains(e.getStop())) {
                         double tourL = cn.length + dc.getDistance(e.getStop(), start);
-                        if (tourL<=maxLength+epsilon) q.add(cn);
-                        else if (cur.length>0) candidates.add(cur);
+                        if (!e.getStop().hasReach() || e.getStop().getReach()+epsilon>=Math.min(cn.length, (minLength-tourL)/2)) {
+                            if (tourL <= maxLength + epsilon) {
+                                q.add(cn);
+                            } else if (cur.length > 0) {
+                                candidates.add(cur);
+                            }
+                        }
                     }
                 }
             }

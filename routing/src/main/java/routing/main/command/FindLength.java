@@ -42,7 +42,7 @@ public class FindLength extends Command {
     }
 
     public String getName() {
-        return "findLength";
+        return "length";
     }
 
     protected void initialize(ArgParser ap) {
@@ -77,7 +77,6 @@ public class FindLength extends Command {
                 g2 = gr.getSpGraph();
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph Read! Reading time: " + (stop-start)/1000. + "s");
-                if (g2.getBi()==true) System.out.println("Warning: Exact routing on a bidirectional graph is slow!");
             } else {
                 System.out.println("Extracting subgraph...");
                 start = System.currentTimeMillis();

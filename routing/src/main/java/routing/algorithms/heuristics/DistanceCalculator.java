@@ -25,6 +25,9 @@ public class DistanceCalculator {
     public double getDistance(Node n0, Node n1) {
         return getDistance(n0.getLat(), n0.getLon(), n1.getLat(), n1.getLon());
     }
+    public double getDistance2(Node n0, Node n1) {
+        return getDistance2(n0.getLat(), n0.getLon(), n1.getLat(), n1.getLon());
+    }
     public double getDistance(Node n0, Edge e1) {
         double lat1 = (e1.getStart().getLat()+e1.getStop().getLat())/2;
         double lon1 = (e1.getStart().getLon()+e1.getStop().getLon())/2;

@@ -102,11 +102,11 @@ public class FindLength extends Command {
             System.out.println("Writing routes to '" + out + "'...");
             JSONArray routes = new JSONArray();
             for (Path p : paths) {
-                double weight = p.getWeight(wb) / p.getLength();
-                double interference = lambda * p.getInterference(strictness);
+                double weight = p.getWeight(wb)/p.getLength();
+                double interference = lambda*p.getInterference(strictness);
                 p.addTag("weight", weight);
                 p.addTag("interf", interference);
-                p.addTag("score", weight + interference);
+                p.addTag("score", weight+interference);
                 routes.add(p.toJSON());
             }
             JSONObject j = new JSONObject();

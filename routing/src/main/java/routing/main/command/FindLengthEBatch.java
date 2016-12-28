@@ -75,7 +75,7 @@ public class FindLengthEBatch extends Command {
         wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 0.5), ap.getDouble("wSafe", 0.5));
         wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         s = ap.getDouble("s", 0.4);
-        lambda = ap.getDouble("lambda", 25);
+        lambda = ap.getDouble("lambda", 12);
         time = ap.getLong("time", 60*60*1000);
         nrThreads = ap.getInt("threads", 16);
     }
@@ -183,8 +183,8 @@ public class FindLengthEBatch extends Command {
             output.put("scoreBound", rlf.getScore());
             output.put("nrIter", rlf.getNrIterations());
             if (p!=null) {
-                double weight = p.getWeight(wb) / p.getLength();
-                double interference = lambda * p.getInterference(s) / p.getLength();
+                double weight = p.getWeight(wb)/p.getLength();
+                double interference = lambda*p.getInterference(s);
                 double score = weight + interference;
                 p.addTag("length", p.getLength());
                 p.addTag("weight", weight);

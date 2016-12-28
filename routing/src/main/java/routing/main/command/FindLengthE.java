@@ -103,7 +103,7 @@ public class FindLengthE extends Command {
                 double interference = lambda*p.getInterference(s);
                 p.addTag("weight", weight);
                 p.addTag("interf", interference);
-                p.addTag("score", weight + interference);
+                p.addTag("score", weight+interference);
                 JSONArray routes = new JSONArray();
                 routes.add(p.toJSON());
                 j.put("routes", routes);

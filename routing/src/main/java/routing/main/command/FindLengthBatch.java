@@ -122,19 +122,16 @@ public class FindLengthBatch extends Command {
                 output.put("forwardTime", rlf.forwardTime/1000.);
                 output.put("backwardTimeAvg", rlf.backwardTime/(1000.*alternatives));
                 JSONArray ps = new JSONArray();
-                double bestScore = Double.MAX_VALUE;
                 for (Path p : paths) {
-                    double weight = p.getWeight(wb) / p.getLength();
-                    double interference = lambda * p.getInterference(strictness) / p.getLength();
+                    double weight = p.getWeight(wb)/p.getLength();
+                    double interference = lambda*p.getInterference(strictness);
                     double score = weight + interference;
-                    bestScore = Math.min(bestScore, score);
                     p.addTag("length", p.getLength());
                     p.addTag("weight", weight);
                     p.addTag("interf", interference);
                     p.addTag("score", score);
                     ps.add(p.toJSON());
                 }
-                output.put("bestScore", bestScore);
                 output.put("paths", ps);
                 result.put("configuration", configuration);
                 result.put("output", output);

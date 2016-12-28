@@ -14,8 +14,6 @@ import java.util.*;
  * Created by Pieter Stroobant in September 2016.
  */
 public class ExhaustiveRouteLengthFinder {
-    static boolean debug = false;
-
     // Algorithmic parameters
     // ----------------------
     // Startnode (in the hypergraph)
@@ -205,7 +203,7 @@ public class ExhaustiveRouteLengthFinder {
         cntrThread.start();
         PriorityQueue<PathCost> queue = new PriorityQueue<>((o1, o2) -> o1.c<o2.c? -1 : (o1.c>o2.c? 1 : 0));
         ApproximatePath startPath = new ApproximatePath(start);
-        queue.add(new PathCost(startPath, 0));
+        queue.add(new PathCost(startPath, estimateScore(startPath)));
         ApproximatePath best = null;
         double bestScore = Double.MAX_VALUE;
         iter = 0;
@@ -215,17 +213,20 @@ public class ExhaustiveRouteLengthFinder {
         scenarios.put(new NodeLen(start, 0.), startSet);
         while (!queue.isEmpty()) {
             PathCost curPC = queue.poll();
-            curScore = curPC.c;
+            if (curPC.c>=bestScore) {
+                curScore = bestScore;
+                break;
+            }
             if (!cntr.running) return null;
+            curScore = curPC.c;
             ApproximatePath curPath = curPC.p;
             double curLength = curPath.getLength();
             if (scenarios.get(new NodeLen(curPath.getEnd(), curLength)).remove(curPath)) {
                 iter++;
                 if (verbose) {
-                    System.out.println(new DecimalFormat("#0.0000").format(curScore) + "/" + (bestScore>10000? "inf" : new DecimalFormat("#0.0000").format(bestScore))); // For debugging
+                    System.out.println((curScore>10000? "inf" : new DecimalFormat("#0.0000").format(curScore)) + "/" +
+                            (bestScore>10000? "inf" : new DecimalFormat("#0.0000").format(bestScore)));
                 }
-                if (curScore>=bestScore && curLength!=0) break;
-
                 for (Edge ed : curPath.getEnd().getOutEdges()) {
                     ApproximatePath ePath = new ApproximatePath(curPath);
                     double eLength = curLength + ed.getLength();
@@ -263,7 +264,6 @@ public class ExhaustiveRouteLengthFinder {
             }
         }
         cntrThread.interrupt();
-        if (best == null) curScore = Double.MAX_VALUE;
         return best;
     }
 
@@ -396,7 +396,7 @@ public class ExhaustiveRouteLengthFinder {
             super(p);
         }
 
-        public double getUnscaledInterference() {
+        private double getUnscaledInterference() {
             return getUnscaledInterference(0, getEdges().size());
         }
 

@@ -7,6 +7,7 @@ import routing.graph.weights.WeightGetter;
 import java.util.*;
 
 /**
+ * Simple shortest path tree based method to determine reaches up to a maximal length dMax.
  * Created by Pieter on 1/03/2016.
  */
 public class LengthReachFinder {
@@ -50,7 +51,7 @@ public class LengthReachFinder {
     }
 
     private class reachThread implements Runnable {
-        public reachThread() {
+        private reachThread() {
         }
 
         public void run() {
@@ -62,7 +63,7 @@ public class LengthReachFinder {
         }
 
         // Calculate distances to all nodes further than lowerbound and closer upperbound from the neighbour of each node
-        public void processNode(Node n) {
+        private void processNode(Node n) {
             // Find the neighbour that is the most far from n
             double maxLength = 2*dMax + getFurthestNeighbour(n);
             // Now execute modified Dijkstra
@@ -72,7 +73,7 @@ public class LengthReachFinder {
             updateTreeNode(r, 0);
         }
 
-        public double getFurthestNeighbour(Node n) {
+        private double getFurthestNeighbour(Node n) {
             double maxLength = 0;
             for (Edge e : n.getOutEdges())
                 if (e.getLength() > maxLength) maxLength = e.getLength();
@@ -80,9 +81,9 @@ public class LengthReachFinder {
         }
 
         private class TreeNodeLength {
-            Tree.TreeNode tn;
-            double length;
-            public TreeNodeLength(Tree.TreeNode tn, double length) {
+            private Tree.TreeNode tn;
+            private double length;
+            private TreeNodeLength(Tree.TreeNode tn, double length) {
                 this.tn = tn;
                 this.length = length;
             }
@@ -93,8 +94,8 @@ public class LengthReachFinder {
             n = hyper.getNodePair(n, n);
             Tree tree = new Tree();
             TreeHeap<TreeNodeLength> candidates = new TreeHeap<>();
-            HashSet<Node> toReach = new HashSet<Node>();
-            HashSet<Node> addedNodes = new HashSet<Node>();
+            HashSet<Node> toReach = new HashSet<>();
+            HashSet<Node> addedNodes = new HashSet<>();
             candidates.add(n.getId(), 0.0, new TreeNodeLength(new Tree.TreeNode(tree.getRoot(), n, null), 0.));
             toReach.add(n);
             while(!toReach.isEmpty()) {
@@ -122,7 +123,7 @@ public class LengthReachFinder {
             return tree;
         }
 
-        public double updateTreeNode(Tree.TreeNode n, double distanceFromRoot) {
+        private double updateTreeNode(Tree.TreeNode n, double distanceFromRoot) {
             double maxDistFromLeaf = -1;
             for (Tree.TreeNode child: n.getChildren()) {
                 double edgeLength = child.getEdgeFromParent().getLength();

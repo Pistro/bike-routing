@@ -17,17 +17,13 @@ import java.util.*;
  * @author Pieter
  */
 public class Dijkstra {
-    private HashSet<Node> added = new HashSet<Node>();
+    private HashSet<Node> added = new HashSet<>();
     private final Tree tree = new Tree();
-    private TreeHeap<Tree.TreeNode> candidates = new TreeHeap<Tree.TreeNode>();
+    private TreeHeap<Tree.TreeNode> candidates = new TreeHeap<>();
     private Tree.TreeNode lastAdded = null;
     private double lastDist = -1;
     private WeightGetter wg;
     private final boolean isSourceTree;
-
-    public Set<Tree.TreeNode> getCandidates() {
-        return candidates.getElements();
-    }
 
     public Dijkstra(WeightGetter wg) {
         this.wg = wg;
@@ -48,11 +44,8 @@ public class Dijkstra {
     public Path getPath(Node stop) {
         Path out;
         if (!added.contains(stop)) {
-            if (extend(stop)) {
-                out = lastAdded.getPathFromRoot();
-            } else {
-                return null;
-            }
+            if (extend(stop)) out = lastAdded.getPathFromRoot();
+            else return null;
         } else {
             if (lastAdded.getNode() == stop) out = lastAdded.getPathFromRoot();
             else out = tree.getPath(stop.getId());

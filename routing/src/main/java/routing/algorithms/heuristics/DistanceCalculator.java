@@ -5,7 +5,8 @@ import routing.graph.Node;
 import routing.graph.SimpleNode;
 
 /**
- * Created by piete on 29/09/2016.
+ * Allows to quickly estimate the distance between graph objects (nodes, edges) that are in the proximity of a specified center node.
+ * Created by Pieter on 29/09/2016.
  */
 public class DistanceCalculator {
     private final double lonScale;

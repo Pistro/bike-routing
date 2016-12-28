@@ -11,16 +11,16 @@ import java.util.*;
  * Created by pieter on 27/02/2016.
  */
 public class ComponentDiscovery {
-    private Stack<Node> s = new Stack<Node>();
-    private HashMap<Node, AlgInfo> extraNodeInfo = new HashMap<Node, AlgInfo>();
-    private LinkedList<Set<Node>> components = new LinkedList<Set<Node>>();
+    private Stack<Node> s = new Stack<>();
+    private HashMap<Node, AlgInfo> extraNodeInfo = new HashMap<>();
+    private LinkedList<Set<Node>> components = new LinkedList<>();
 
     private static class AlgInfo {
         private static int nrIndices = 0;
-        public int index;
-        public int lowlink;
-        public boolean onStack;
-        public AlgInfo() {
+        private int index;
+        private int lowlink;
+        private boolean onStack;
+        private AlgInfo() {
             index = nrIndices;
             nrIndices++;
             lowlink = index;
@@ -59,7 +59,7 @@ public class ComponentDiscovery {
         // If v is a root node, pop the stack and generate an SCC
         if (vInfo.lowlink == vInfo.index) {
             // Start a new strongly connected component
-            Set<Node> component = new HashSet<Node>();
+            Set<Node> component = new HashSet<>();
             Node w;
             do {
                 w = s.pop();

@@ -11,18 +11,18 @@ import java.util.LinkedList;
  * Created by piete on 28/02/2016.
  */
 public class FloydWarshall {
-    protected HashMap<Node, Integer> mapping = new HashMap<Node, Integer>();
+    private HashMap<Node, Integer> mapping = new HashMap<>();
     protected Node[] reverseMapping;
     protected double [][] lengths;
     protected double [][] distances;
-    protected Edge [][] next;
+    private Edge [][] next;
     public double getDistance(Node start, Node stop) {
         return distances[mapping.get(start)][mapping.get(stop)];
     }
     public Path getPath(Node start, Node stop) {
         int stop_idx = mapping.get(stop);
         Node current = start;
-        LinkedList<Edge> edges = new LinkedList<Edge>();
+        LinkedList<Edge> edges = new LinkedList<>();
         while (current !=null && current != stop) {
             Edge e = next[mapping.get(current)][stop_idx];
             edges.add(e);

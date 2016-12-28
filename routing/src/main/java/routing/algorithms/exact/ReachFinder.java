@@ -10,25 +10,24 @@ import java.util.HashMap;
  * Created by pieter on 29/02/2016.
  */
 public class ReachFinder extends FloydWarshall {
-    private double [] [] mapDist;
 
     public class ReachValues {
         public double weight;
         public double length;
         public double dist;
-        public ReachValues(double weight, double length, double dist) {
+        private ReachValues(double weight, double length, double dist) {
             this.weight = weight;
             this.length = length;
             this.dist = dist;
         }
     }
 
-    private HashMap<Node, ReachValues> reaches = new HashMap<Node, ReachValues>();
+    private HashMap<Node, ReachValues> reaches = new HashMap<>();
     public ReachFinder(Graph g, WeightGetter wg) {
         super(g, wg);
         HashMap<Long, Node> nodes = g.getNodes();
         int nrNodes = nodes.size();
-        mapDist = new double[nrNodes][nrNodes];
+        double [] []  mapDist = new double[nrNodes][nrNodes];
         for (int i = 0; i<nrNodes; i++) {
             Node u = reverseMapping[i];
             for (int j = i; j<nrNodes; j++) {
@@ -38,7 +37,6 @@ public class ReachFinder extends FloydWarshall {
             }
         }
         for (int k = 0; k<nrNodes; k++) {
-            //if ((100*k/nrNodes)>(100*(k-1)/nrNodes)) System.out.println((100*k/nrNodes) + "%");
             double maxWeight = 0;
             double maxLength = 0;
             double maxDist = 0;
@@ -50,14 +48,6 @@ public class ReachFinder extends FloydWarshall {
                             maxWeight = Math.max(maxWeight, Math.min(distances[i][k], distances[k][j]));
                             maxLength = Math.max(maxLength, Math.min(lengths[i][k], lengths[k][j]));
                             maxDist = Math.max(maxDist, Math.min(mapDist[i][k], mapDist[k][j]));
-                            /*if (k == mapping.get(g.getNode(33503567)) && Math.abs(Math.min(lengths[i][k], lengths[k][j])-344.91)<0.1) {
-                                System.out.println("Got it!");
-                                Node start = reverseMapping[i], inter = reverseMapping[k], stop = reverseMapping[j];
-                                System.out.println(start.getId() + " --> " + inter.getId() + " w:" + getPath(start, inter).getWeight(g) + " l:" + getPath(start, inter).getLength());
-                                System.out.println(inter.getId() + " --> " + stop.getId() + " w:" + getPath(inter, stop).getWeight(g) + " l:" + getPath(inter, stop).getLength());
-                                System.out.println(start.getId() + " --> " + stop.getId() + " w:" + getPath(start, stop).getWeight(g) + " l:" + getPath(start, stop).getLength());
-                                System.out.println(getPath(start, stop));
-                            }*/
                         }
                     }
                 }

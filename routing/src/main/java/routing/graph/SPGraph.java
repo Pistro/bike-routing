@@ -104,53 +104,8 @@ public class SPGraph extends Graph {
         int i = 0;
         for (Node n: g.getNodes().values()) {
             if (++i%1000==0) System.out.println(i + "/" + g.getNodes().size());
-            HashMap<Node, Double> added = new HashMap<>();
-            HashMap<Node, DoubleEdgeSet> proposals = new HashMap<>();
-            Queue<NodeEdgeLen> queue = new PriorityQueue<>((o1, o2) -> o1.l<o2.l? -1 : (o1.l>o2.l? 1 : 0));
-            queue.add(new NodeEdgeLen(n, null, 0));
-            while (!proposals.isEmpty() || added.isEmpty()) {
-                NodeEdgeLen cur = queue.poll();
-                Double curAdd = added.get(cur.n);
-                if (curAdd==null) {
-                    added.put(cur.n, cur.l);
-                    curAdd = cur.l;
-                    for (Edge e: cur.n.getInEdges()) {
-                        double newL = cur.l+wg.getWeight(e);
-                        Double addedLength = added.get(e.getStart());
-                        if (addedLength==null || newL<addedLength+epsilon) {
-                            queue.add(new NodeEdgeLen(e.getStart(), e, newL));
-                            DoubleEdgeSet newDNS = proposals.get(e.getStart());
-                            if (newDNS != null && newL + epsilon < newDNS.d) {
-                                proposals.remove(e.getStart());
-                                newDNS = null;
-                            }
-                            if (cur.l <= reach + epsilon) {
-                                if (newDNS == null) {
-                                    newDNS = new DoubleEdgeSet(newL);
-                                    proposals.put(e.getStart(), newDNS);
-                                }
-                                if (newL < newDNS.d + epsilon) newDNS.edges.add(e);
-                            }
-                        }
-                    }
-                }
-                if (cur.l<curAdd+epsilon && cur.last!=null) {
-                    if (cur.l-wg.getWeight(cur.last) <= reach + epsilon) {
-                        DoubleEdgeSet curDNS = proposals.get(cur.n);
-                        curDNS.edges.remove(cur.last);
-                        if (curDNS.edges.isEmpty()) proposals.remove(cur.n);
-                    }
-                    if (cur.l>reach+epsilon && cur.l-wg.getWeight(cur.last)<=reach+epsilon) {
-                        hyperNodes.addNodePair(cur.last.getStop(), n);
-                    }
-                }
-            }
-        }
-        i = 0;
-        for (Node n: g.getNodes().values()) {
-            if (++i%1000==0) System.out.println(i + "/" + g.getNodes().size());
             contract(n, (added, last, pLen) -> {
-                if (pLen>reach+epsilon && pLen-wg.getWeight(last)<=reach+epsilon) {
+                if (pLen > reach + epsilon && pLen - wg.getWeight(last) <= reach + epsilon) {
                     Set<Edge> edgeSet = new HashSet<>();
                     ArrayList<Edge> edgeList = new ArrayList<>();
                     edgeSet.add(last);
@@ -160,34 +115,42 @@ public class SPGraph extends Graph {
                             if (edgeSet.add(e)) edgeList.add(e);
                         }
                     }
-                    edgeList.remove(0);
                     Collections.reverse(edgeList);
                     for (Edge e: edgeList) {
-                        NodePair np0 = hyperNodes.getNodePair(n, e.getStart());
-                        if (np0!=null) {
-                            NodePair np1 = hyperNodes.addNodePair(n, e.getStop());
-                            boolean add = true;
-                            for (Edge e0: np1.getInEdges()) {
-                                if (e0.getStart()==np0 && e0.id==e.id) add = false;
-                            }
-                            if (add) {
-                                Edge e_new = new Edge(e, np0, np1);
-                                e_new.id = e.id;
-                            }
+                        if (pLen-added.get(e.getStart()).d>reach+epsilon && pLen-added.get(e.getStop()).d<=reach+epsilon) {
+                            hyperNodes.addNodePair(e.getStop(), last.getStop());
                         }
                     }
+                }
+            });
+        }
+        i = 0;
+        for (Node n: g.getNodes().values()) {
+            if (++i%1000==0) System.out.println(i + "/" + g.getNodes().size());
+            contract(n, (added, last, pLen) -> {
+                if (last == null) return;
+                NodePair np0 = hyperNodes.getNodePair(n, last.getStart());
+                if (np0 == null) return;
+                if (pLen<=reach+epsilon) {
+                    NodePair np1 = hyperNodes.addNodePair(n, last.getStop());
+                    Edge e_new = new Edge(last, np0, np1);
+                    e_new.id = last.id;
+                } else if (pLen-wg.getWeight(last)<=reach+epsilon) {
+                    Set<Edge> edgeSet = new HashSet<>();
+                    ArrayList<Edge> edgeList = new ArrayList<>();
+                    edgeSet.add(last);
                     edgeList.add(last);
+                    for (int j = 0; j<edgeList.size(); j++) {
+                        for (Edge e: added.get(edgeList.get(j).getStart()).edges) {
+                            if (edgeSet.add(e)) edgeList.add(e);
+                        }
+                    }
+                    Collections.reverse(edgeList);
                     for (Edge e: edgeList) {
                         if (pLen-added.get(e.getStart()).d>reach+epsilon && pLen-added.get(e.getStop()).d<=reach+epsilon) {
-                            NodePair np0 = hyperNodes.getNodePair(n, last.getStart());
-                            if (np0!=null) {
-                                NodePair np1 = hyperNodes.getNodePair(e.getStop(), last.getStop());
-                                if (np1==null) {
-                                    throw new IllegalArgumentException("Maximal history nodepair missing!");
-                                }
-                                Edge e_new = new Edge(last, np0, np1);
-                                e_new.id = last.id;
-                            }
+                            NodePair np1 = hyperNodes.getNodePair(e.getStop(), last.getStop());
+                            Edge e_new = new Edge(last, np0, np1);
+                            e_new.id = last.id;
                         }
                     }
                 }
@@ -304,7 +267,6 @@ public class SPGraph extends Graph {
     public Graph getSubgraph(Node start, double len) {
         DistanceCalculator dc = new DistanceCalculator(start);
         // Forward Dijkstra
-        HashSet<NodePair> startPairs = new HashSet<>();
         HashMap<Node, Double> forwardLens = new HashMap<>();
         contract(start, (added, last, pLen) -> {
             if (pLen>reach+epsilon && pLen-wg.getWeight(last)<=reach+epsilon) {
@@ -325,6 +287,7 @@ public class SPGraph extends Graph {
                 }
             }
         });
+        HashSet<NodePair> startPairs = new HashSet<>();
         Queue<NodeLen> q = new PriorityQueue<>((o1, o2) -> o1.l<o2.l? -1 : (o1.l>o2.l? 1 : 0));
         for (Node n: getNodes().values()) {
             NodePair np = (NodePair) n;

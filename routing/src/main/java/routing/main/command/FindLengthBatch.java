@@ -61,7 +61,7 @@ public class FindLengthBatch extends Command {
         reach = ap.getDouble("reach", -1);
         if (hyperIn==null && reach==-1) throw new IllegalArgumentException("Either reach or hyperIn should be specified!");
         // Optionals
-        alternatives = (int) ap.getLong("alt", 8);
+        alternatives = (int) ap.getLong("alt", 4);
         wb = new WeightBalancer(ap.getDouble("wFast", 0.33), ap.getDouble("wAttr", 0.33), ap.getDouble("wSafe", 0.33));
         wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         lambda = ap.getDouble("lambda", 12);

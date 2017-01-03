@@ -213,10 +213,7 @@ public class ExhaustiveRouteLengthFinder {
         scenarios.put(new NodeLen(start, 0.), startSet);
         while (!queue.isEmpty()) {
             PathCost curPC = queue.poll();
-            if (curPC.c>=bestScore) {
-                curScore = bestScore;
-                break;
-            }
+            if (curPC.c>=bestScore) break;
             if (!cntr.running) return null;
             curScore = curPC.c;
             ApproximatePath curPath = curPC.p;
@@ -263,6 +260,7 @@ public class ExhaustiveRouteLengthFinder {
                 }
             }
         }
+        curScore = bestScore;
         cntrThread.interrupt();
         return best;
     }

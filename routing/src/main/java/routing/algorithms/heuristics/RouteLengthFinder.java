@@ -82,7 +82,9 @@ public class RouteLengthFinder {
         DistanceCalculator dc = new DistanceCalculator(start);
         // Forward Dijkstra (based on weight) until all nodes with a tourlength possibly smaller than maxLength are added
         Tree t = new Tree();
-        HashSet<Candidate> candidates = new HashSet<>();
+        HashSet<Node> candidateEnds = new HashSet<>();
+        LinkedList<Candidate> candidates = new LinkedList<>();
+        HashSet<Candidate> extraCandidates = new HashSet<>();
         Queue<Candidate> q = new PriorityQueue<>((o1, o2) -> o1.weight<o2.weight? -1 : (o1.weight>o2.weight? 1 : 0));
         q.add(new Candidate(new Tree.TreeNode(t.getRoot(), start, null), 0, 0));
         HashSet<Node> added = new HashSet<>();
@@ -93,7 +95,9 @@ public class RouteLengthFinder {
             if (added.add(curN)) {
                 LinkedList<Edge> outEdges = nearbyNodes.get(curN);
                 if (outEdges==null) outEdges = curN.getOutEdges();
-                if (dc.getDistance2(curN, start)+epsilon>=(minLength-cur.length)*(minLength-cur.length) && outEdges.size()>1) candidates.add(cur);
+                if (dc.getDistance2(curN, start)+epsilon>=(minLength-cur.length)*(minLength-cur.length)) {
+                    if (candidateEnds.add(((SPGraph.NodePair) curN).e) && outEdges.size()>1) candidates.add(cur);
+                }
                 for (Edge e: outEdges) {
                     Candidate cn = new Candidate(new Tree.TreeNode(cur.node, e.getStop(), e), cur.weight+wb.getWeight(e), cur.length + e.getLength());
                     LinkedList<Edge> cnOutEdges = nearbyNodes.get(cn.node.getNode());
@@ -111,13 +115,14 @@ public class RouteLengthFinder {
                             if (tourL <= maxLength + epsilon) {
                                 q.add(cn);
                             } else if (cur.length > 0) {
-                                candidates.add(cur);
+                                extraCandidates.add(cur);
                             }
                         }
                     }
                 }
             }
         }
+        for (Candidate c: extraCandidates) if (candidateEnds.add(((SPGraph.NodePair) c.node.getNode()).e)) candidates.add(c);
         return new ArrayList<>(candidates);
     }
 
@@ -199,7 +204,7 @@ public class RouteLengthFinder {
                     Candidate tn = new Candidate(new Tree.TreeNode(curCan.node, e.getStart(), e), curCan.weight + wg.getWeight(e, curCan.length), curCan.length + e.getLength());
                     while (tn.node.getNode().getInEdges().size()==1 && tn.length<=maxLength+epsilon) {
                         e = tn.node.getNode().getInEdges().getFirst();
-                        tn = new Candidate(new Tree.TreeNode(tn.node, e.getStart(), e), tn.weight+wb.getWeight(e), tn.length + e.getLength());
+                        tn = new Candidate(new Tree.TreeNode(tn.node, e.getStart(), e), tn.weight+wg.getWeight(e, tn.length), tn.length + e.getLength());
                     }
                     if (!addedNodes.contains(e.getStart())) {
                         double tourL = tn.length + dc.getDistance(e.getStart(), forwardStop)+forwardLength;
@@ -207,6 +212,10 @@ public class RouteLengthFinder {
                     }
                 }
             }
+        }
+        if (bestPath!=null) {
+            bestPath.addTag("turn_id_s", ((SPGraph.NodePair) forwardPath.getEnd()).s.getId());
+            bestPath.addTag("turn_id_e", ((SPGraph.NodePair) forwardPath.getEnd()).e.getId());
         }
         return bestPath;
     }

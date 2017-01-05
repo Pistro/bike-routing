@@ -19,7 +19,7 @@ Some of the processors adapt the stream from their first read on. These processo
  - Following pip packages are always required:
      - haversine
      - shapely ([Windows](http://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely), [Linux](https://pypi.python.org/pypi/Shapely))
-     - rtree ([Windows](https://github.ugent.be/pkstroob/bike-routing/blob/master/preprocessing/RtreeWindows.md), [Linux](http://toblerity.org/rtree/install.html#nix))
+     - rtree ([Windows](RtreeWindows.md), [Linux](http://toblerity.org/rtree/install.html#nix))
 
  - If you are not interested to calculate height differences you should remove `height.py` from the 'extra' subfolder. If you are interested, following pip packages are required:
      - GDAL ([Windows](http://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal), [Linux](http://www.sarasafavi.com/installing-gdalogr-on-ubuntu.html))

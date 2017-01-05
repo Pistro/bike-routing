@@ -108,7 +108,7 @@ We can generate length & height constrained tours by using the findHeight comman
  - maxLength: the maximal allowed length of the generated tour
  - minHeight: the minimal allowed height difference of the generated tour
  - maxHeight: the maximal allowed height difference of the generated tour
- - out: The path of the json-file that will contain a representation of the generated tour. This representation can be visualised using our [visualisation tools](https://github.ugent.be/pkstroob/bike-routing/tree/master/visualisation).
+ - out: The path of the json-file that will contain a representation of the generated tour. This representation can be visualised using our [visualisation tools](../visualisation).
 
 This command also accepts several optional arguments:
  - alt [default: 8]: The number of attempts to create an alternative tour from the given starting point.

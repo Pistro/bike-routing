@@ -80,7 +80,7 @@ We can generate length constrained tours by using the findLength command. This c
  - startId: the id of the startNode. This id corresponds to the original osm-id. The easiest way to generate a route starting from a location of one's own choosing is to look up the street via [OpenStreetMap](https://www.openstreetmap.org/). Use the search bar to find the intended way, click on the matching search result and get the id of a node that corresponds to a crossing.
  - minLength: the minimal allowed length of the generated tour
  - maxLength: the maximal allowed length of the generated tour
- - out: The path of the json-file that will contain a representation of the generated tour. This representation can be visualised using our [visualisation tools](https://github.ugent.be/pkstroob/bike-routing/tree/master/visualisation).
+ - out: The path of the json-file that will contain a representation of the generated tour. This representation can be visualised using our [visualisation tools](../visualisation).
 
 This command also accepts several optional arguments:
  - alt [default: 8]: The number of attempts to create an alternative tour from the given starting point.

@@ -3,7 +3,7 @@
  - Osmosis: This program is used to extract information on different kinds of features from the osm data. The executable should be added to your PATH variable.
 	- Windows: Download the latest version [here](http://wiki.openstreetmap.org/wiki/Osmosis/Quick_Install_(Windows)), unzip it and add the bin subfolder to your path. It may be necessary to open the osmosis.bat file and change PLEXUS_CP so that it matches the attached plexus jar in lib\default.
 	- [Other](http://wiki.openstreetmap.org/wiki/Osmosis/Installation)
- - Osm2graph: This program matches features from one or more osm data sources and converts the osm representation into a graph representation. Requirements of osm2graph and additional info can be found on [this page](https://github.ugent.be/pkstroob/bike-routing/blob/master/preprocessing/osm2graph.md).
+ - Osm2graph: This program matches features from one or more osm data sources and converts the osm representation into a graph representation. Requirements of osm2graph and additional info can be found on [this page](osm2graph.md).
  
 ## Input data
  - The preprocessing algorithm accepts height data as a single GeoTIFF-file.
@@ -30,8 +30,8 @@ The preprocessing process will create several files in the source directory:
  - regionName_way.osm: Similar to regionName_way.osm, this file contains the entire roadnetwork of the region. However, here roads are split up at every interesction, leading to a graph representation. This file is of no use after the preprocessing step.
  - regionName_inter.osm: This file contains a graph representation of the entire roadnetwork of the region. It also contains all extra information of the data enrichment: whether edges are close to water, pass through forests,... Height data is also included. This file does not yeat contains perceived edge weights, but is used as an unput to calculate edge weights. As a result, the file is very useful when the edge weight functions are adapted, to avoid redoing the data enrichment.
  - regionName_fixture.xml: This file can be used to create the [visualisation database](https://github.ugent.be/pkstroob/bike-routing/tree/master/visualisation).
- - regionName.wgr: This file contains a graph representation of the entire roadnetwork of the region, including perceived weights. The file serves as an input for the [routing step](https://github.ugent.be/pkstroob/bike-routing/tree/master/routing).
+ - regionName.wgr: This file contains a graph representation of the entire roadnetwork of the region, including perceived weights. The file serves as an input for the [routing step](../routing).
  
 After preprocessing the Belgian dataset, some subregions can be extracted by executing `bash\windows\extractRegionsBelgium.bat` (for Windows) or `bash bash/unix/extractRegionsBelgium.sh` (for Unix).
 Using the preprocessed data in the `belgium_inter.osm` file, similar 'intermediate' files are created for east-flanders, ghent and geraardsbergen. For each of these regions, a weighted graph representation is also generated.
-Additionaly, for each region, a json file is created that is useful for studying the relation between perceived weight and walking distance. The file can be visualised using the 'pleasantness' page described in [visualisations](https://github.ugent.be/pkstroob/bike-routing/tree/master/visualisation).
+Additionaly, for each region, a json file is created that is useful for studying the relation between perceived weight and walking distance. The file can be visualised using the 'pleasantness' page described in [visualisations](../visualisation).

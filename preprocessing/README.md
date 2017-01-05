@@ -29,7 +29,7 @@ The preprocessing process will create several files in the source directory:
  - regionName_water.osm: This file contains all waterways, lakes and reservoirs in the region. It is used for checking whether a road passes is close to water. This file is of no use after the preprocessing step.
  - regionName_way.osm: Similar to regionName_way.osm, this file contains the entire roadnetwork of the region. However, here roads are split up at every interesction, leading to a graph representation. This file is of no use after the preprocessing step.
  - regionName_inter.osm: This file contains a graph representation of the entire roadnetwork of the region. It also contains all extra information of the data enrichment: whether edges are close to water, pass through forests,... Height data is also included. This file does not yeat contains perceived edge weights, but is used as an unput to calculate edge weights. As a result, the file is very useful when the edge weight functions are adapted, to avoid redoing the data enrichment.
- - regionName_fixture.xml: This file can be used to create the [visualisation database](https://github.ugent.be/pkstroob/bike-routing/tree/master/visualisation).
+ - regionName_fixture.xml: This file can be used to create the [visualisation database](../visualisation).
  - regionName.wgr: This file contains a graph representation of the entire roadnetwork of the region, including perceived weights. The file serves as an input for the [routing step](../routing).
  
 After preprocessing the Belgian dataset, some subregions can be extracted by executing `bash\windows\extractRegionsBelgium.bat` (for Windows) or `bash bash/unix/extractRegionsBelgium.sh` (for Unix).

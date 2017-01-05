@@ -11,9 +11,9 @@
 
 In order to visualize a routes, a database that maps the id's of the ways contained in the route to the corresponding nodes is necessary.
 
-One option to get a database file is to download the [Belgian](https://www.dropbox.com/s/zv4rlmii71gsvde/db.tar.gz) or [French](https://www.dropbox.com/s/gxn6wwez9c5sl86/db.tar.gz) database corresponding to the graph files that are provided in [routing](https://github.ugent.be/pkstroob/bike-routing/tree/master/routing) and place the db.sqlite file in the visualisation folder.
+One option to get a database file is to download the [Belgian](https://www.dropbox.com/s/zv4rlmii71gsvde/db.tar.gz) or [French](https://www.dropbox.com/s/gxn6wwez9c5sl86/db.tar.gz) database corresponding to the graph files that are provided in [routing](../routing) and place the db.sqlite file in the visualisation folder.
 
-Alternatively, a fixture-file, produced as a result of the [preprocessing](https://github.ugent.be/pkstroob/bike-routing/tree/master/preprocessing) step, can be used to create a database.
+Alternatively, a fixture-file, produced as a result of the [preprocessing](../preprocessing) step, can be used to create a database.
 To create the database, execute:
 ```sh
 $ python manage.py makemigrations

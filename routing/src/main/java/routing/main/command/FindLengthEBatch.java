@@ -99,6 +99,7 @@ public class FindLengthEBatch extends Command {
             long stop = System.currentTimeMillis();
             System.out.println("Nodes ready! Read & matching time: " + (stop-start)/1000. + "s");
             if (hyperIn!=null) {
+                System.out.println("Reading hypergraph...");
                 start = System.currentTimeMillis();
                 XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
                 XMLSPGraphReader gr = new XMLSPGraphReader(g);

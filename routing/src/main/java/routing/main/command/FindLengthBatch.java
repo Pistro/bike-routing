@@ -39,6 +39,7 @@ public class FindLengthBatch extends Command {
     private int alternatives;
     private String hyperIn;
     private double reach;
+    private double beta;
 
     public FindLengthBatch() {}
 
@@ -61,7 +62,8 @@ public class FindLengthBatch extends Command {
         reach = ap.getDouble("reach", -1);
         if (hyperIn==null && reach==-1) throw new IllegalArgumentException("Either reach or hyperIn should be specified!");
         // Optionals
-        alternatives = (int) ap.getLong("alt", 4);
+        beta = ap.getDouble("beta", 0.6);
+        alternatives = ap.getInt("alt", 4);
         wb = new WeightBalancer(ap.getDouble("wFast", 0.33), ap.getDouble("wAttr", 0.33), ap.getDouble("wSafe", 0.33));
         wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         lambda = ap.getDouble("lambda", 12);
@@ -100,7 +102,7 @@ public class FindLengthBatch extends Command {
                 System.out.println("Starting routing " + nr + "/" + nodeInfo.size() + " (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)...");
                 CandidateSelector cs = new DistPlSelector(en.getKey());
                 start = System.currentTimeMillis();
-                RouteLengthFinder rlf = new RouteLengthFinder(wb, en.getKey(), cs, minLength, maxLength, lambda, strictness, alternatives, g2);
+                RouteLengthFinder rlf = new RouteLengthFinder(wb, en.getKey(), cs, minLength, maxLength, lambda, strictness, beta, alternatives, g2);
                 LinkedList<Path> paths = rlf.findRoutes();
                 stop = System.currentTimeMillis();
                 System.out.println("Routing finished " + nr + "/" + nodeInfo.size() + " (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)! Routing time: " + (stop-start)/1000. + "s");
@@ -116,6 +118,7 @@ public class FindLengthBatch extends Command {
                 configuration.put("maxLength", maxLength);
                 configuration.put("strictness", strictness);
                 configuration.put("lambda", lambda);
+                configuration.put("beta", beta);
                 configuration.put("alternatives", alternatives);
                 JSONObject output = new JSONObject();
                 output.put("time", (stop-start)/1000.);

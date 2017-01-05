@@ -13,7 +13,7 @@ import java.util.*;
 public class RouteLengthFinder {
     private final SPGraph.NodePair start;
     private final HashMap<Node, LinkedList<Edge>> nearbyNodes;
-    private final static double beta = 0.6;
+    private final double beta;
     private final static double epsilon = 0.00001;
     private final HashSet<Node> ends = new HashSet<>();
     private final WeightBalancer wb;
@@ -29,7 +29,7 @@ public class RouteLengthFinder {
     public long forwardTime;
     public long backwardTime = 0;
 
-    public RouteLengthFinder(WeightBalancer wb, Node start, CandidateSelector cs, double minLength, double maxLength, double lambda, double strictness, int nrAttempts, SPGraph hyper) {
+    public RouteLengthFinder(WeightBalancer wb, Node start, CandidateSelector cs, double minLength, double maxLength, double lambda, double strictness, double beta, int nrAttempts, SPGraph hyper) {
         long go = System.nanoTime();
         this.nearbyNodes = hyper.getSubgraphFast(start);
         long stop = System.nanoTime();
@@ -49,6 +49,7 @@ public class RouteLengthFinder {
         this.wb = wb;
         this.lambda = lambda;
         this.strictness = strictness;
+        this.beta = beta;
         this.nrAttempts = nrAttempts;
         this.minLength = minLength;
         this.maxLength = maxLength;

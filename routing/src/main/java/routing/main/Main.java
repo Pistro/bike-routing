@@ -63,33 +63,6 @@ public class Main {
         c.execute(gr.getGraph());
     }
 
-    private static void printReachDistribution(Graph g, double maxReach) {
-        double precision = 500;
-        int [] reachCounts = new int[(int) (maxReach/precision)];
-        int larger = 0;
-        for (Node n: g.getNodes().values()) {
-            int pos = n.hasReach()? (int) (n.getReach()/precision) : Integer.MAX_VALUE;
-            if (pos<=reachCounts.length) reachCounts[pos]++;
-            else larger++;
-        }
-        for (int i = 0; i<reachCounts.length; i++) {
-            System.out.println(precision*i + "-" + precision*(i+1) + ": " + reachCounts[i]);
-        }
-        System.out.println("Other: " + larger);
-    }
-
-    private static void writeNodes(Graph g, String outPath) throws IOException {
-        int ndCntr = 0;
-        JSONObject out = new JSONObject();
-        JSONArray nodes = new JSONArray();
-        out.put("nodes", nodes);
-        for (Node n : g.getNodes().values()) {
-            ndCntr++;
-            if (ndCntr%100==0) nodes.add(n.toJSON());
-        }
-        new JsonWriter(out).write(outPath);
-    }
-
     public static String convertToFileURL(String filename) {
         String path = new File(filename).getAbsolutePath();
         if (File.separatorChar != '/') {
@@ -100,27 +73,5 @@ public class Main {
             path = "/" + path;
         }
         return "file:" + path;
-    }
-
-    public static String printMatrix(double [] [] m, String name) {
-        String out = name + " = [";
-        for (int i = 0; i<m.length; i++) {
-            for (int j = 0; j<m[i].length-1; j++) {
-                out += m[i][j] + ", ";
-            }
-            out += m[i][m[i].length-1] + ((i == m.length-1)? "];" : ";\n");
-        }
-        return out;
-    }
-
-    public static String printMatrix(int [] [] m, String name) {
-        String out = name + " = [";
-        for (int i = 0; i<m.length; i++) {
-            for (int j = 0; j<m[i].length-1; j++) {
-                out += m[i][j] + ", ";
-            }
-            out += m[i][m[i].length-1] + ((i == m.length-1)? "];" : ";\n");
-        }
-        return out;
     }
 }

@@ -208,7 +208,7 @@ public class RouteLengthFinder {
                         tn = new Candidate(new Tree.TreeNode(tn.node, e.getStart(), e), tn.weight+wg.getWeight(e, tn.length), tn.length + e.getLength());
                     }
                     if (!addedNodes.contains(e.getStart())) {
-                        double tourL = tn.length + dc.getDistance(e.getStart(), forwardStop)+forwardLength;
+                        double tourL = tn.length + forwardLength + dc.getDistance(e.getStart(), forwardStop);
                         if (tourL<=maxLength+epsilon) candidates.add(tn);
                     }
                 }

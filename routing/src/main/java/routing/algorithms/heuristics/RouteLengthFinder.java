@@ -96,7 +96,8 @@ public class RouteLengthFinder {
             if (added.add(curN)) {
                 LinkedList<Edge> outEdges = nearbyNodes.get(curN);
                 if (outEdges==null) outEdges = curN.getOutEdges();
-                if (dc.getDistance2(curN, start)+epsilon>=(minLength-cur.length)*(minLength-cur.length)) {
+                double minlenMinCurlen = minLength-cur.length;
+                if (minlenMinCurlen<0 || dc.getDistance2(curN, start)+epsilon>=minlenMinCurlen*minlenMinCurlen) {
                     if (candidateEnds.add(((SPGraph.NodePair) curN).e) && outEdges.size()>1) candidates.add(cur);
                 }
                 for (Edge e: outEdges) {

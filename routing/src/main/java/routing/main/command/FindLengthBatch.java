@@ -29,7 +29,6 @@ import java.util.Map;
  */
 public class FindLengthBatch extends Command {
     private WeightBalancer wb;
-    private WeightBalancer wbReach;
     private double minLength;
     private double maxLength;
     private double lambda;
@@ -65,7 +64,6 @@ public class FindLengthBatch extends Command {
         beta = ap.getDouble("beta", 0.6);
         alternatives = ap.getInt("alt", 4);
         wb = new WeightBalancer(ap.getDouble("wFast", 0.33), ap.getDouble("wAttr", 0.33), ap.getDouble("wSafe", 0.33));
-        wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         lambda = ap.getDouble("lambda", 12);
         strictness = ap.getDouble("strictness", 0.4);
     }
@@ -92,7 +90,7 @@ public class FindLengthBatch extends Command {
             } else {
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                g2 = new SPGraph(g, reach, false, wbReach);
+                g2 = new SPGraph(g, reach, false, wb);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }

@@ -24,7 +24,6 @@ import java.util.LinkedList;
  */
 public class FindLength extends Command {
     private WeightBalancer wb;
-    private WeightBalancer wbReach;
     private long startId;
     private double minLength;
     private double maxLength;
@@ -60,7 +59,6 @@ public class FindLength extends Command {
         beta = ap.getDouble("beta", 0.6);
         alternatives = ap.getInt("alt", 4);
         wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 0.5), ap.getDouble("wSafe", 0.5));
-        wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         lambda = ap.getDouble("lambda", 12);
         strictness = ap.getDouble("strictness", 0.4);
     }
@@ -87,7 +85,7 @@ public class FindLength extends Command {
                 System.out.println("Extraction finished! Extraction time: " + (stop-start)/1000. + "s");
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                g2 = new SPGraph(g, reach, true, wbReach);
+                g2 = new SPGraph(g, reach, true, wb);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }

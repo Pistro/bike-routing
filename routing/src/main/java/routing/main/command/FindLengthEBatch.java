@@ -31,7 +31,6 @@ import java.util.HashMap;
  */
 public class FindLengthEBatch extends Command {
     private WeightBalancer wb;
-    private WeightBalancer wbReach;
     private double minLength;
     private double maxLength;
     private double lambda;
@@ -73,7 +72,6 @@ public class FindLengthEBatch extends Command {
         if (hyperIn==null && reach==-1) throw new IllegalArgumentException("Either reach or hyperIn should be specified!");
         // Optionals
         wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 0.5), ap.getDouble("wSafe", 0.5));
-        wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         s = ap.getDouble("s", 0.4);
         lambda = ap.getDouble("lambda", 12);
         time = ap.getLong("time", 60*60*1000);
@@ -112,7 +110,7 @@ public class FindLengthEBatch extends Command {
             } else {
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                hyper = new SPGraph(g, reach, false, wbReach);
+                hyper = new SPGraph(g, reach, false, wb);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }

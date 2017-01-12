@@ -431,7 +431,7 @@ public class ExhaustiveRouteLengthFinder {
                     double expextedDistDec = expectedDist;
                     if (curEdge instanceof ApproximateEdge) expextedDistDec -= ((ApproximateEdge) curEdge).dMax;
                     if (compEdge instanceof ApproximateEdge) expextedDistDec -= ((ApproximateEdge) compEdge).dMax;
-                    if (dist2<expextedDistDec*expextedDistDec) {
+                    if (expextedDistDec>0 && dist2<expextedDistDec*expextedDistDec) {
                         double dist = dc.getDistance(curEdge, compEdge);
                         if (curEdge instanceof ApproximateEdge) dist += ((ApproximateEdge) curEdge).dMax;
                         if (compEdge instanceof ApproximateEdge) dist += ((ApproximateEdge) compEdge).dMax;
@@ -478,7 +478,7 @@ public class ExhaustiveRouteLengthFinder {
                     double expectedDistDec = expectedDist;
                     double dist2 = dc.getDistance2(e, e0);
                     if (e instanceof ApproximateEdge) expectedDistDec -= ((ApproximateEdge) e).dMax;
-                    if (dist2<expectedDistDec*expectedDistDec) {
+                    if (expectedDistDec>0 && dist2<expectedDistDec*expectedDistDec) {
                         double dist = dc.getDistance(e, e0);
                         if (e instanceof ApproximateEdge) dist += ((ApproximateEdge) e).dMax;
                         if (dist<expectedDist) {

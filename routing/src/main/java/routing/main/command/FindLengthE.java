@@ -23,7 +23,6 @@ import java.io.IOException;
  */
 public class FindLengthE extends Command {
     private WeightBalancer wb;
-    private WeightBalancer wbReach;
     private long startId;
     private double minLength;
     private double maxLength;
@@ -56,7 +55,6 @@ public class FindLengthE extends Command {
         if (hyperIn==null && reach==-1) throw new IllegalArgumentException("Either reach or hyperIn should be specified!");
         // Optionals
         wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 0.5), ap.getDouble("wSafe", 0.5));
-        wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
         s = ap.getDouble("s", 0.4);
         lambda = ap.getDouble("lambda", 12);
         time = ap.getLong("time", -1);
@@ -85,7 +83,7 @@ public class FindLengthE extends Command {
                 System.out.println("Extraction finished! Extraction time: " + (stop-start)/1000. + "s");
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                g2 = new SPGraph(g, reach, false, wbReach);
+                g2 = new SPGraph(g, reach, false, wb);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }

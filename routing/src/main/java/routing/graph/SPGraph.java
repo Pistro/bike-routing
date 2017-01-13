@@ -314,7 +314,7 @@ public class SPGraph extends Graph {
         forwardLens.clear();
         // Forward Dijkstra
         double curLen = -1;
-        while (curLen<len && !q.isEmpty()) {
+        while (curLen<=len+epsilon && !q.isEmpty()) {
             NodePairLen curNl = q.poll();
             NodePair curNode = curNl.n;
             curLen = curNl.l;
@@ -322,7 +322,7 @@ public class SPGraph extends Graph {
                 forwardLens.put(curNode, curLen);
                 for (Edge e: curNode.getOutEdges()) {
                     double eTourLen = curLen+e.getLength() + dc.getDistance(e.getStop(), start);
-                    if (!forwardLens.containsKey(e.getStop()) && eTourLen<len) {
+                    if (!forwardLens.containsKey(e.getStop()) && eTourLen<=len+epsilon) {
                         q.add(new NodePairLen((NodePair) e.getStop(), curLen+e.getLength()));
                     }
                 }
@@ -338,7 +338,7 @@ public class SPGraph extends Graph {
             }
         }
         curLen = -1;
-        while (curLen<len && !q.isEmpty()) {
+        while (curLen<=len+epsilon && !q.isEmpty()) {
             NodePairLen curNl = q.poll();
             NodePair curNode = curNl.n;
             curLen = curNl.l;
@@ -346,7 +346,7 @@ public class SPGraph extends Graph {
                 backwardLens.put(curNode, curLen);
                 for (Edge e: curNode.getInEdges()) {
                     double eTourLen = curLen + e.getLength() + dc.getDistance(start, e.getStart());
-                    if (!backwardLens.containsKey(e.getStart()) && eTourLen<len) {
+                    if (!backwardLens.containsKey(e.getStart()) && eTourLen<=len+epsilon) {
                         q.add(new NodePairLen((NodePair) e.getStart(), curLen+e.getLength()));
                     }
                 }
@@ -357,7 +357,7 @@ public class SPGraph extends Graph {
         GraphNodePairSet nps = new GraphNodePairSet(out);
         for (Map.Entry<NodePair, Double> nd: forwardLens.entrySet()) {
             Double backwardLen = backwardLens.get(nd.getKey());
-            if (backwardLen!=null && nd.getValue()+backwardLen<=len) {
+            if (backwardLen!=null && nd.getValue()+backwardLen<=len+epsilon) {
                 nps.addNodePair(nd.getKey().s, nd.getKey().e);
             }
         }

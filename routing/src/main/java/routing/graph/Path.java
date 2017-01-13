@@ -132,7 +132,7 @@ public class Path {
     }
     public String toString() {
         String s = Long.toString(start.getId());
-        for (Edge e : edges) s += " --> " + e.getStop().getId();
+        for (Edge e : edges) s += " -" + e.id + "-> " + e.getStop().getId();
         return s;
     }
 

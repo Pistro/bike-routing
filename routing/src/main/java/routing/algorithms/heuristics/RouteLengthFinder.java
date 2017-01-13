@@ -1,14 +1,16 @@
 package routing.algorithms.heuristics;
 
-import jdk.nashorn.internal.ir.debug.JSONWriter;
-import org.json.simple.JSONObject;
-import routing.IO.JsonWriter;
 import routing.algorithms.candidateselection.*;
 import routing.graph.*;
 import routing.graph.weights.PoisonedWeightGetter;
 import routing.graph.weights.WeightBalancer;
 
 import java.util.*;
+
+/**
+ * Heuristic that aims to find tours with a minimum score in time O(l_max log(l_max^2))
+ * Created by Pieter on 29/09/2016.
+ */
 
 public class RouteLengthFinder {
     private final SPGraph.NodePair start;
@@ -128,28 +130,26 @@ public class RouteLengthFinder {
         return new ArrayList<>(candidates);
     }
 
-    public class PathInfo {
-        Node penultimate;
-        double length;
-        public PathInfo(Node penultimate, double length) {
+    private class PathInfo {
+        private Node penultimate;
+        private double length;
+        private PathInfo(Node penultimate, double length) {
             this.penultimate = penultimate;
             this.length = length;
         }
     }
 
-    public HashMap<Node, PathInfo> collectPartialPathInfo(Path p) {
+    private HashMap<Node, PathInfo> collectPartialPathInfo(Path p) {
         HashMap<Node, PathInfo> stopInfo = new HashMap<>();
         double curPos = 0;
-        LinkedList<Edge> processedEdges = new LinkedList<>();
         for (Edge e : p.getEdges()) {
             curPos += e.getLength();
-            processedEdges.add(e);
             stopInfo.put(e.getStop(), new PathInfo(e.getStart(), curPos));
         }
         return stopInfo;
     }
 
-    public Path closeTour(Path forwardPath, PoisonedWeightGetter wg) {
+    private Path closeTour(Path forwardPath, PoisonedWeightGetter wg) {
         DistanceCalculator dc = new DistanceCalculator(start);
         // Create map with information of different points along the forward route
         HashMap<Node, PathInfo> stopInfo = collectPartialPathInfo(forwardPath);
@@ -165,7 +165,7 @@ public class RouteLengthFinder {
         }
         // Dijkstra algorithm
         PriorityQueue<Candidate> candidates = new PriorityQueue<>((o1, o2) -> o1.weight<o2.weight? -1 : (o1.weight>o2.weight? 1 : 0));
-        HashSet<Node> addedNodes = new HashSet<Node>();
+        HashSet<Node> addedNodes = new HashSet<>();
         Tree tree = new Tree();
         for (Node n: ends) candidates.add(new Candidate(new Tree.TreeNode(tree.getRoot(), n, null), 0., 0.));
         double bestScore = Double.MAX_VALUE;

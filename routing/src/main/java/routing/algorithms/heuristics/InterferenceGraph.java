@@ -8,7 +8,8 @@ import routing.graph.SimpleNode;
 import java.util.LinkedList;
 
 /**
- * Created by piete on 10/12/2016.
+ * Estimates interference of a tour with n edges in time O(n log(n)), with a given precision
+ * Created by Pieter on 10/12/2016.
  */
 public class InterferenceGraph {
     private final DistanceCalculator dc;
@@ -75,18 +76,18 @@ public class InterferenceGraph {
         private InterferenceNode lower_left = null;
         private InterferenceNode lower_right = null;
         private ApproximateEdge e;
-        public InterferenceNode(ApproximateEdge e) {
+        private InterferenceNode(ApproximateEdge e) {
             this.e = e;
         }
-        public void setLeft(InterferenceNode l) {
+        private void setLeft(InterferenceNode l) {
             this.left = l;
             l.right = this;
         }
-        public void setLowerLeft(InterferenceNode l) {
+        private void setLowerLeft(InterferenceNode l) {
             this.lower_left = l;
             l.upper_right = this;
         }
-        public void setLowerRight(InterferenceNode l) {
+        private void setLowerRight(InterferenceNode l) {
             this.lower_right = l;
             l.upper_left = this;
         }
@@ -96,7 +97,7 @@ public class InterferenceGraph {
         private final double p_min;
         private final double p_max;
         private final double d_max;
-        public ApproximateEdge(LinkedList<Edge> edges, double pos) {
+        private ApproximateEdge(LinkedList<Edge> edges, double pos) {
             this.edges = new LinkedList<>(edges);
             // start & stop
             setStart(edges.getFirst().getStart());
@@ -114,7 +115,7 @@ public class InterferenceGraph {
             p_min = pos+edges.getFirst().getLength()/2;
             p_max = pos+l-edges.getLast().getLength()/2;
         }
-        public ApproximateEdge(Edge e, double pos) {
+        private ApproximateEdge(Edge e, double pos) {
             edges = new LinkedList<>();
             edges.add(e);
             setStart(e.getStart());
@@ -126,7 +127,7 @@ public class InterferenceGraph {
         }
     }
 
-    double getInterference() {
+    public double getInterference() {
         InterferenceNode cur = lowerStart;
         boolean first = true;
         double interference = 0;
@@ -137,7 +138,8 @@ public class InterferenceGraph {
         }
         return 2*interference/(pLen*pLen);
     }
-    double getInterferenceFromNode(InterferenceNode in) {
+
+    private double getInterferenceFromNode(InterferenceNode in) {
         double interference = 0;
         double d_req = 0;
         InterferenceNode cur = in;

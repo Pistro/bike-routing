@@ -7,7 +7,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 /**
- * Created by pieter on 22/11/2016.
+ * Selects a specified amount of nodes, aiming for the most uniform geographical distribution
+ * Created by Pieter on 22/11/2016.
  */
 public class PointSelector {
     private final Graph g;

@@ -9,6 +9,7 @@ import routing.graph.weights.WeightGetter;
 import java.util.*;
 
 /**
+ * Creates a graph in which only paths are present that are least cost according to the nodes encountered a last number of meters.
  * Created by pieter on 24/10/2016.
  */
 public class SPGraph extends Graph {
@@ -104,38 +105,55 @@ public class SPGraph extends Graph {
         int i = 0;
         for (Node n: g.getNodes().values()) {
             if (++i%1000==0) System.out.println(i + "/" + g.getNodes().size());
-            contract(n, (treeNode, pLen) -> {
-                if (pLen > reach + epsilon && pLen - treeNode.getEdgeFromParent().getLength() <= reach + epsilon) {
-                    Path p = treeNode.getPathFromRoot();
-                    LinkedList<Edge> pEdges = p.getEdges();
-                    while (pLen > reach + epsilon) {
-                        p.setStart(pEdges.getFirst().getStop());
-                        pLen -= pEdges.removeFirst().getLength();
+            contract(n, (added, lastNode, lastEdge, pLen) -> {
+                if (pLen > reach + epsilon && pLen - lastEdge.getLength() <= reach + epsilon) {
+                    Set<Edge> edgeSet = new HashSet<>();
+                    ArrayList<Edge> edgeList = new ArrayList<>();
+                    edgeSet.add(lastEdge);
+                    edgeList.add(lastEdge);
+                    for (int j = 0; j<edgeList.size(); j++) {
+                        for (Edge e: added.get(edgeList.get(j).getStart()).edges) {
+                            if (edgeSet.add(e)) edgeList.add(e);
+                        }
                     }
-                    hyperNodes.addNodePair(p.getStart(), treeNode.getNode());
+                    Collections.reverse(edgeList);
+                    for (Edge e: edgeList) {
+                        if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
+                            hyperNodes.addNodePair(e.getStop(), lastEdge.getStop());
+                        }
+                    }
                 }
             });
         }
         i = 0;
         for (Node n: g.getNodes().values()) {
             if (++i%1000==0) System.out.println(i + "/" + g.getNodes().size());
-            contract(n, (treeNode, pLen) -> {
-                Edge lastEdge = treeNode.getEdgeFromParent();
+            contract(n, (added, lastNode, lastEdge, pLen) -> {
                 if (lastEdge == null) return;
                 NodePair np0 = hyperNodes.getNodePair(n, lastEdge.getStart());
                 if (np0 == null) return;
                 if (pLen<=reach+epsilon) {
                     NodePair np1 = hyperNodes.addNodePair(n, lastEdge.getStop());
-                    addEdge(np0, np1, lastEdge);
+                    Edge e_new = new Edge(lastEdge, np0, np1);
+                    e_new.id = lastEdge.id;
                 } else if (pLen-lastEdge.getLength()<=reach+epsilon) {
-                    Path p = treeNode.getPathFromRoot();
-                    LinkedList<Edge> pEdges = p.getEdges();
-                    while (pLen > reach + epsilon) {
-                        p.setStart(pEdges.getFirst().getStop());
-                        pLen -= pEdges.removeFirst().getLength();
+                    Set<Edge> edgeSet = new HashSet<>();
+                    ArrayList<Edge> edgeList = new ArrayList<>();
+                    edgeSet.add(lastEdge);
+                    edgeList.add(lastEdge);
+                    for (int j = 0; j<edgeList.size(); j++) {
+                        for (Edge e: added.get(edgeList.get(j).getStart()).edges) {
+                            if (edgeSet.add(e)) edgeList.add(e);
+                        }
                     }
-                    NodePair np1 = hyperNodes.getNodePair(p.getStart(), lastEdge.getStop());
-                    addEdge(np0, np1, lastEdge);
+                    Collections.reverse(edgeList);
+                    for (Edge e: edgeList) {
+                        if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
+                            NodePair np1 = hyperNodes.getNodePair(e.getStop(), lastNode);
+                            Edge e_new = new Edge(lastEdge, np0, np1);
+                            e_new.id = lastEdge.id;
+                        }
+                    }
                 }
             });
         }
@@ -158,7 +176,7 @@ public class SPGraph extends Graph {
                         Node n_new = hyperNodes.addNodePair(new SimpleNode(), curNp.e);
                         Edge e_in_new = new Edge(e_in, e_in.getStart(), n_new);
                         e_in_new.id = e_in.id;
-                        for (Edge e_out: cur.getOutEdges()) {
+                        for (Edge e_out : cur.getOutEdges()) {
                             if (e_out != matching_out) {
                                 Edge e_new = new Edge(e_out, n_new, e_out.getStop());
                                 e_new.id = e_out.id;
@@ -172,51 +190,76 @@ public class SPGraph extends Graph {
     }
 
     private interface TreeNodeProcessor {
-        void process(Tree.TreeNode lastNode, double pLen);
+        void process(HashMap<Node, CostLenEdgeSet> added, Node lastNode, Edge lastEdge, double pLen);
     }
 
     private void contract(Node n, TreeNodeProcessor p) {
-        Tree t = new Tree();
-        Tree.TreeNode start = new Tree.TreeNode(t.getRoot(), n, null);
-        HashMap<Node, Double> added = new HashMap<>();
-        HashMap<Node, Double> proposed = new HashMap<>();
-        Queue<TreeNodeCostLen> queue = new PriorityQueue<>((o1, o2) -> o1.c<o2.c? -1 : (o1.c>o2.c? 1 : 0));
-        queue.add(new TreeNodeCostLen(start, 0, 0));
-        double lastAddCost = 0;
-        while (!queue.isEmpty()) {
-            TreeNodeCostLen cur = queue.poll();
-            Double curAddCost = added.get(cur.n.getNode());
-            if (curAddCost==null || cur.c<curAddCost+epsilon) {
-                if (curAddCost==null) {
-                    added.put(cur.n.getNode(), cur.c);
-                    curAddCost = cur.c;
-                }
-                if (proposed.isEmpty() && curAddCost>lastAddCost+epsilon) break;
-                lastAddCost = curAddCost;
-                proposed.remove(cur.n.getNode());
-                p.process(cur.n, cur.l);
-                for (Edge e: cur.n.getNode().getOutEdges()) {
-                    double newCost = curAddCost+wg.getWeight(e);
-                    Double newAddCost = added.get(e.getStop());
-                    Double newPropCost = proposed.get(e.getStop());
-                    if ((newAddCost==null || newCost<newAddCost+epsilon) && (newPropCost==null || newCost<newPropCost+epsilon)) {
-                        double newLength = cur.l+e.getLength();
-                        queue.add(new TreeNodeCostLen(new Tree.TreeNode(cur.n, e.getStop(), e), newCost, newLength));
-                        if (cur.l<=reach+epsilon) proposed.put(e.getStop(), newCost);
-                        else if (newPropCost==null || newCost+epsilon<newPropCost) proposed.remove(e.getStop());
+        HashMap<Node, CostLenEdgeSet> added = new HashMap<>();
+        HashMap<Node, CostLen> proposals = new HashMap<>();
+        Queue<NodeEdgeCostLen> queue = new PriorityQueue<>((o1, o2) -> (o1.c<o2.c || (o1.c==o2.c && o1.c<o2.l))? -1 : ((o1.c>o2.c || (o1.c==o2.c && o1.l>o2.l))? 1 : 0));
+        queue.add(new NodeEdgeCostLen(n, null, 0, 0));
+        double lastCost = 0, lastLen = 0;
+        while (true) {
+            NodeEdgeCostLen cur = queue.poll();
+            if (proposals.isEmpty() && (cur.c>lastCost+epsilon || cur.l>lastLen+epsilon)) break;
+            lastCost = cur.c;
+            lastLen = cur.l;
+            CostLenEdgeSet curAddDNS = added.get(cur.n);
+            if (curAddDNS==null) {
+                curAddDNS = new CostLenEdgeSet(cur.c, cur.l);
+                added.put(cur.n, curAddDNS);
+                for (Edge e: cur.n.getOutEdges()) {
+                    double newC = cur.c+wg.getWeight(e);
+                    double newL = cur.l+e.getLength();
+                    CostLenEdgeSet newAddDNS = added.get(e.getStop());
+                    CostLen newPropDNS = proposals.get(e.getStop());
+                    if ((newAddDNS==null || (newC<newAddDNS.c+epsilon && newL<newAddDNS.l+epsilon))
+                            && (newPropDNS==null || (newC<newPropDNS.c+epsilon && newL<newPropDNS.l+epsilon))) {
+                        queue.add(new NodeEdgeCostLen(e.getStop(), e, newC, newL));
+                        if (cur.l <= reach + epsilon) {
+                            proposals.put(e.getStop(), new CostLen(newC, newL));
+                        } else if (newPropDNS != null && (newC + epsilon < newPropDNS.c || newL + epsilon < newPropDNS.l)) {
+                            proposals.remove(e.getStop());
+                        }
                     }
                 }
+            }
+            if (cur.c<curAddDNS.c+epsilon && cur.l<curAddDNS.l+epsilon) {
+                if (cur.last!=null) curAddDNS.edges.add(cur.last);
+                proposals.remove(cur.n);
+                p.process(added, cur.n, cur.last, cur.l);
             }
         }
     }
 
-    private class TreeNodeCostLen {
-        private Tree.TreeNode n;
+    private class CostLenEdgeSet {
+        private final double c;
+        private final double l;
+        private final Set<Edge> edges = new HashSet<>();
+        private CostLenEdgeSet(double c, double l) {
+            this.c = c;
+            this.l = l;
+        }
+    }
+
+    private class CostLen {
+        private final double c;
+        private final double l;
+        private CostLen(double c, double l) {
+            this.c = c;
+            this.l = l;
+        }
+    }
+
+    private class NodeEdgeCostLen {
+        private Node n;
+        private Edge last;
         private double c;
         private double l;
-        private TreeNodeCostLen(Tree.TreeNode n, double c, double l) {
+        private NodeEdgeCostLen(Node n, Edge last, double c, double l) {
             this.n = n;
-            this.c = l;
+            this.last = last;
+            this.c = c;
             this.l = l;
         }
     }
@@ -235,20 +278,26 @@ public class SPGraph extends Graph {
         DistanceCalculator dc = new DistanceCalculator(start);
         // Find starting nodes
         HashMap<NodePair, Double> forwardLens = new HashMap<>();
-        HashSet<Node> createdNodes = new HashSet<>();
-        contract(start, (treeNode, pLen) -> {
-            Edge lastEdge = treeNode.getEdgeFromParent();
+        HashSet<NodePair> createdNodes = new HashSet<>();
+        contract(start, (added, lastNode, lastEdge, pLen) -> {
             if (pLen>reach+epsilon && pLen-lastEdge.getLength()<=reach+epsilon) {
-                Path p = treeNode.getPathFromRoot();
-                LinkedList<Edge> pEdges = p.getEdges();
-                double pLenOrg = pLen;
-                while (pLen > reach + epsilon) {
-                    p.setStart(pEdges.getFirst().getStop());
-                    pLen -= pEdges.removeFirst().getLength();
+                Set<Edge> edgeSet = new HashSet<>();
+                ArrayList<Edge> edgeList = new ArrayList<>();
+                edgeSet.add(lastEdge);
+                edgeList.add(lastEdge);
+                for (int j = 0; j<edgeList.size(); j++) {
+                    for (Edge e: added.get(edgeList.get(j).getStart()).edges) {
+                        if (edgeSet.add(e)) edgeList.add(e);
+                    }
                 }
-                NodePair np = new NodePair(0, p.getStart(), treeNode.getNode());
-                createdNodes.add(np);
-                forwardLens.put(np, pLenOrg);
+                Collections.reverse(edgeList);
+                for (Edge e: edgeList) {
+                    if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
+                        NodePair np = new NodePair(0, e.getStop(), lastNode);
+                        createdNodes.add(np);
+                        forwardLens.put(np, pLen);
+                    }
+                }
             }
         });
         // Match those staring nodes to nodes from the actual graph
@@ -262,8 +311,8 @@ public class SPGraph extends Graph {
             }
         }
         if (!createdNodes.isEmpty()) throw new IllegalArgumentException("Expected nodepairs are missing!");
-        // Forward Dijkstra
         forwardLens.clear();
+        // Forward Dijkstra
         double curLen = -1;
         while (curLen<len && !q.isEmpty()) {
             NodePairLen curNl = q.poll();
@@ -332,29 +381,51 @@ public class SPGraph extends Graph {
                 addedStartPairs.add(np);
             }
         }
-        contract(start, (treeNode, pLen) -> {
-            Edge lastEdge = treeNode.getEdgeFromParent();
+        contract(start, (added, lastNode, lastEdge, pLen) -> {
             if (pLen>reach+epsilon && pLen-lastEdge.getLength()<=reach+epsilon) {
-                Path p = treeNode.getPathFromRoot();
-                LinkedList<Edge> pEdges = p.getEdges();
-                while (pLen > reach + epsilon) {
-                    p.setStart(pEdges.getFirst().getStop());
-                    pLen -= pEdges.removeFirst().getLength();
+                Set<Edge> edgeSet = new HashSet<>();
+                ArrayList<Edge> edgeList = new ArrayList<>();
+                edgeSet.add(lastEdge);
+                edgeList.add(lastEdge);
+                for (int j = 0; j<edgeList.size(); j++) {
+                    for (Edge e: added.get(edgeList.get(j).getStart()).edges) {
+                        if (edgeSet.add(e)) edgeList.add(e);
+                    }
                 }
-                NodePair npf = nps.getNodePair(p.getStart(), treeNode.getNode());
-                addedStartPairs.remove(npf);
-                if (npf!=null) {
-                    // Ensure that the entire path to npf is present
-                    p = treeNode.getPathFromRoot();
-                    pEdges = p.getEdges();
-                    pEdges.removeLast();
-                    for (Edge e: pEdges) {
+                boolean successors = false;
+                for (Edge e: edgeList) {
+                    if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
+                        NodePair np1 = nps.getNodePair(e.getStop(), lastNode);
+                        if (np1!=null) {
+                            successors = true;
+                            addedStartPairs.remove(np1);
+                            NodePair np0 = nps.addNodePair(start, lastEdge.getStart());
+                            boolean add = true;
+                            for (Edge e0: np1.getInEdges()) {
+                                if (e0.getStart()==np0 && e0.id==e.id) add = false;
+                            }
+                            if (add) {
+                                Edge e_new = new Edge(lastEdge, np0, np1);
+                                e_new.id = lastEdge.id;
+                            }
+                        }
+                    }
+                }
+                if (successors) {
+                    edgeList.remove(0);
+                    Collections.reverse(edgeList);
+                    for (Edge e: edgeList) {
                         NodePair np0 = nps.addNodePair(start, e.getStart());
                         NodePair np1 = nps.addNodePair(start, e.getStop());
-                        addEdge(np0, np1, e);
+                        boolean add = true;
+                        for (Edge e0: np1.getInEdges()) {
+                            if (e0.getStart()==np0 && e0.id==e.id) add = false;
+                        }
+                        if (add) {
+                            Edge e_new = new Edge(e, np0, np1);
+                            e_new.id = e.id;
+                        }
                     }
-                    NodePair np0 = nps.addNodePair(start, lastEdge.getStart());
-                    addEdge(np0, npf, lastEdge);
                 }
             }
         });
@@ -373,79 +444,66 @@ public class SPGraph extends Graph {
         return out;
     }
 
-    private void addEdge(NodePair start, NodePair stop, Edge e) {
-        boolean add = true;
-        for (Edge e0 : start.getOutEdges()) {
-            if (e0.getStop() == stop && e0.id == e.id) {
-                add = false;
-                break;
-            }
-        }
-        if (add) {
-            Edge e_new = new Edge(e, start, stop);
-            e_new.id = e.id;
-        }
-    }
-
     public HashMap<Node, LinkedList<Edge>> getSubgraphFast(Node start) {
         HashMap<Node, LinkedList<Edge>> out = new HashMap<>();
         NodePairSet nps = new NodePairSet();
         // Forward Dijkstra
-        contract(start, (treeNode, pLen) -> {
-            Edge lastEdge = treeNode.getEdgeFromParent();
+        contract(start, (added, lastNode, lastEdge, pLen) -> {
             if (pLen>reach+epsilon && pLen-lastEdge.getLength()<=reach+epsilon) {
-                Path p = treeNode.getPathFromRoot();
-                LinkedList<Edge> pEdges = p.getEdges();
-                pEdges.removeLast();
-                for (Edge e: pEdges) {
-                    if (hyperNodes.getNodePair(start, e.getStart())==null) {
-                        NodePair np0 = nps.addNodePair(start, e.getStart());
-                        LinkedList<Edge> edges = out.get(np0);
-                        if (edges == null) {
-                            edges = new LinkedList<>();
-                            out.put(np0, edges);
+                Set<Edge> edgeSet = new HashSet<>();
+                ArrayList<Edge> edgeList = new ArrayList<>();
+                edgeSet.add(lastEdge);
+                edgeList.add(lastEdge);
+                for (int j = 0; j<edgeList.size(); j++) {
+                    for (Edge e: added.get(edgeList.get(j).getStart()).edges) {
+                        if (edgeSet.add(e)) edgeList.add(e);
+                    }
+                }
+                for (Edge e: edgeList) {
+                    if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
+                        NodePair np0 = hyperNodes.getNodePair(start, lastEdge.getStart());
+                        if (np0==null) {
+                            NodePair np1 = hyperNodes.getNodePair(e.getStop(), lastEdge.getStop());
+                            np0 = nps.addNodePair(start, lastEdge.getStart());
+                            LinkedList<Edge> np0Out = out.get(np0);
+                            if (np0Out==null) {
+                                np0Out = new LinkedList<>();
+                                out.put(np0, np0Out);
+                            }
+                            boolean add = true;
+                            for (Edge e0 : np0Out) {
+                                if (e0.getStop() == np1 && e0.id == e.id) add = false;
+                            }
+                            if (add) {
+                                Edge e_new = Edge.getUncoupledEdge(lastEdge, np0, np1);
+                                e_new.id = lastEdge.id;
+                                np0Out.add(e_new);
+                            }
                         }
+                    }
+                }
+                edgeList.remove(0);
+                Collections.reverse(edgeList);
+                for (Edge e: edgeList) {
+                    NodePair np0 = hyperNodes.getNodePair(start, e.getStart());
+                    if (np0==null) {
+                        np0 = nps.addNodePair(start, e.getStart());
                         NodePair np1 = hyperNodes.getNodePair(start, e.getStop());
                         if (np1 == null) np1 = nps.addNodePair(start, e.getStop());
+                        LinkedList<Edge> np0Out = out.get(np0);
+                        if (np0Out==null) {
+                            np0Out = new LinkedList<>();
+                            out.put(np0, np0Out);
+                        }
                         boolean add = true;
-                        for (Edge e0 : edges) {
-                            if (e0.getStop() == np1 && e0.id == e.id) {
-                                add = false;
-                                break;
-                            }
+                        for (Edge e0 : np0Out) {
+                            if (e0.getStop() == np1 && e0.id == e.id) add = false;
                         }
                         if (add) {
                             Edge e_new = Edge.getUncoupledEdge(e, np0, np1);
                             e_new.id = e.id;
-                            edges.add(e_new);
+                            np0Out.add(e_new);
                         }
-                    }
-                }
-                NodePair np0 = hyperNodes.getNodePair(start, lastEdge.getStart());
-                if (np0 == null) {
-                    np0 = nps.addNodePair(start, lastEdge.getStart());
-                    pEdges.add(lastEdge);
-                    while (pLen > reach + epsilon) {
-                        p.setStart(pEdges.getFirst().getStop());
-                        pLen -= pEdges.removeFirst().getLength();
-                    }
-                    NodePair np1 = hyperNodes.getNodePair(p.getStart(), lastEdge.getStop());
-                    LinkedList<Edge> edges = out.get(np0);
-                    if (edges == null) {
-                        edges = new LinkedList<>();
-                        out.put(np0, edges);
-                    }
-                    boolean add = true;
-                    for (Edge e0 : edges) {
-                        if (e0.getStop() == np1 && e0.id == lastEdge.id) {
-                            add = false;
-                            break;
-                        }
-                    }
-                    if (add) {
-                        Edge e_new = Edge.getUncoupledEdge(lastEdge, np0, np1);
-                        e_new.id = lastEdge.id;
-                        edges.add(e_new);
                     }
                 }
             }
@@ -455,7 +513,7 @@ public class SPGraph extends Graph {
 
     private class NodePairSet {
         private long idCnt = -1;
-        public final HashMap<NodePair, NodePair> pairs = new HashMap<>();
+        private final HashMap<NodePair, NodePair> pairs = new HashMap<>();
 
         private NodePairSet() {}
 

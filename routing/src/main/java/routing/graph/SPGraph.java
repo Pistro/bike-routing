@@ -199,7 +199,7 @@ public class SPGraph extends Graph {
         Queue<NodeEdgeCostLen> queue = new PriorityQueue<>((o1, o2) -> (o1.c<o2.c || (o1.c==o2.c && o1.c<o2.l))? -1 : ((o1.c>o2.c || (o1.c==o2.c && o1.l>o2.l))? 1 : 0));
         queue.add(new NodeEdgeCostLen(n, null, 0, 0));
         double lastCost = 0, lastLen = 0;
-        while (true) {
+        while (!queue.isEmpty()) {
             NodeEdgeCostLen cur = queue.poll();
             if (proposals.isEmpty() && (cur.c>lastCost+epsilon || cur.l>lastLen+epsilon)) break;
             lastCost = cur.c;

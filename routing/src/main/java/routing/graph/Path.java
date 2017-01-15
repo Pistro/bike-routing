@@ -85,6 +85,11 @@ public class Path {
         }
         return out;
     }
+    public double getHeightDif() {
+        double hd = 0;
+        for (Edge e: edges) hd += e.getHeightDif();
+        return hd;
+    }
     public double getWeight(WeightGetter g) { return getWeight(g, edges.size()); }
     public double getWeight(WeightGetter g, int pos) {
         double out = 0;
@@ -132,7 +137,7 @@ public class Path {
     }
     public String toString() {
         String s = Long.toString(start.getId());
-        for (Edge e : edges) s += " -" + e.id + "-> " + e.getStop().getId();
+        for (Edge e : edges) s += " -" + e.getId() + "-> " + e.getStop().getId();
         return s;
     }
 

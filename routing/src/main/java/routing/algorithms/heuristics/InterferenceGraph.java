@@ -38,14 +38,15 @@ public class InterferenceGraph {
             double dMaxBound = (1-t)*2*s/Math.PI*d_req;
             prevNode = null;
             LinkedList<InterferenceNode> curLevel = new LinkedList<>();
-            LinkedList<Edge>curEdges = new LinkedList<>();
+            Path curPath = new Path((Node) null);
+            LinkedList<Edge>curEdges = curPath.getEdges();
             InterferenceNode curLowerLeft = prevLevel.getFirst();
             InterferenceNode curLowerRight = null;
             double curL = 0;
             for (InterferenceNode in : prevLevel) {
                 curL += in.e.getLength();
                 if (curL-curLowerLeft.e.edges.getFirst().getLength()/2-in.e.edges.getLast().getLength()/2>dMaxBound) {
-                    InterferenceNode in2 = new InterferenceNode(new ApproximateEdge(curEdges, curLowerLeft.e.p_min-curLowerLeft.e.edges.getFirst().getLength()/2));
+                    InterferenceNode in2 = new InterferenceNode(new ApproximateEdge(curPath, curLowerLeft.e.p_min-curLowerLeft.e.edges.getFirst().getLength()/2));
                     curEdges.clear();
                     if (prevNode!=null) in2.setLeft(prevNode);
                     prevNode = in2;
@@ -58,7 +59,7 @@ public class InterferenceGraph {
                 curEdges.addAll(in.e.edges);
                 curLowerRight = in;
             }
-            InterferenceNode in2 = new InterferenceNode(new ApproximateEdge(curEdges, curLowerLeft.e.p_min-curEdges.getFirst().getLength()/2));
+            InterferenceNode in2 = new InterferenceNode(new ApproximateEdge(curPath, curLowerLeft.e.p_min-curEdges.getFirst().getLength()/2));
             in2.setLeft(prevNode);
             in2.setLowerLeft(curLowerLeft);
             in2.setLowerRight(curLowerRight);
@@ -97,34 +98,35 @@ public class InterferenceGraph {
         private final double p_min;
         private final double p_max;
         private final double d_max;
-        private ApproximateEdge(LinkedList<Edge> edges, double pos) {
-            this.edges = new LinkedList<>(edges);
-            // start & stop
-            setStart(edges.getFirst().getStart());
-            setStop(edges.getLast().getStop());
+        private ApproximateEdge(Path p, double pos) {
+            super(0, p.getEdges().getFirst().getStart(), p.getEnd(), p.getLength(), 0);
+            this.edges = new LinkedList<>(p.getEdges());
             // dMax
             double d_max = 0;
             Node center = new SimpleNode((getStart().getLat()+getStop().getLat())/2, (getStart().getLon()+getStop().getLon())/2);
             for (Edge e: edges) d_max = Math.max(d_max, dc.getDistance(e, center));
             this.d_max = d_max;
-            // length
-            double l = 0;
-            for (Edge e: edges) l += e.getLength();
-            setLength(l);
             // p_min and p_max
             p_min = pos+edges.getFirst().getLength()/2;
-            p_max = pos+l-edges.getLast().getLength()/2;
+            p_max = pos+p.getLength()-edges.getLast().getLength()/2;
         }
         private ApproximateEdge(Edge e, double pos) {
+            super(e);
             edges = new LinkedList<>();
             edges.add(e);
-            setStart(e.getStart());
-            setStop(e.getStop());
-            setLength(e.getLength());
             p_min = pos+e.getLength()/2;
             p_max = p_min;
             d_max = 0;
         }
+
+        @Override
+        public double getWFast() { return 0; }
+
+        @Override
+        public double getWAttr() { return 0; }
+
+        @Override
+        public double getWSafe() { return 0; }
     }
 
     public double getInterference() {

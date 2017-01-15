@@ -17,7 +17,7 @@ public class WeightBalancer implements WeightGetter {
     }
 
     public double getWeight(Edge current) {
-        return wFast*current.getWFast()+wAttr*current.getWAttr()+wSafe*current.getWSafe();
+        return Math.max(wFast*current.getWFast()+wAttr*current.getWAttr()+wSafe*current.getWSafe(), 0);
     }
 
     public double getWFast() { return wFast; }

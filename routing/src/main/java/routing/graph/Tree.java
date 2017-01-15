@@ -214,9 +214,9 @@ public class Tree {
         }
         for (TreeNode r : root.getChildren()) {
             Edge e = r.edgeFromParent;
-            if (e!=null && wayIds.add(e.id)) {
+            if (e!=null && wayIds.add(e.getId())) {
                 JSONObject c = new JSONObject();
-                c.put("id", Integer.toString(e.id));
+                c.put("id", Integer.toString(e.getId()));
                 c.put("tag_start", Long.toString(e.getStart().getId()));
                 c.put("tag_stop", Long.toString(e.getStop().getId()));
                 JSONArray nd = new JSONArray();

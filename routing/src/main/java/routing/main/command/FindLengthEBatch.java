@@ -41,6 +41,7 @@ public class FindLengthEBatch extends Command {
     private long time;
     private int nrThreads;
     private double reach;
+    private int accuracy;
 
     // Batch nodes
     private HashMap<Node, HashMap<String, Object>> nodeInfo;
@@ -66,6 +67,7 @@ public class FindLengthEBatch extends Command {
         minLength = ap.getDouble("minLength");
         maxLength = ap.getDouble("maxLength");
         out = ap.getString("out");
+        accuracy = ap.getInt("accuracy");
         // Choice
         hyperIn = ap.getString("hyperIn", null);
         reach = ap.getDouble("reach", -1);
@@ -94,6 +96,10 @@ public class FindLengthEBatch extends Command {
             nodes = new Node[nodeInfo.size()];
             int idx = 0;
             for (Node n: nodeInfo.keySet()) nodes[idx++] = n;
+            for (int i=0; i<10; i++) {
+                Node n = nodes[i];
+                System.out.println(n.getId());
+            }
             long stop = System.currentTimeMillis();
             System.out.println("Nodes ready! Read & matching time: " + (stop-start)/1000. + "s");
             if (hyperIn!=null) {
@@ -160,7 +166,7 @@ public class FindLengthEBatch extends Command {
         }
 
         public void processNode(Node n) {
-            ExhaustiveRouteLengthFinder rlf = new ExhaustiveRouteLengthFinder(n, wb, lambda, s, minLength, maxLength, hyper);
+            ExhaustiveRouteLengthFinder rlf = new ExhaustiveRouteLengthFinder(n, wb, accuracy, lambda, s, minLength, maxLength, hyper);
             rlf.verbose = false;
             rlf.maxSearchTimeMs = time;
             long start = System.currentTimeMillis();

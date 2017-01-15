@@ -143,38 +143,26 @@ class BikeProfile(Profile):
 		POIscoreFast = self.getConstantScoreFast(tags)
 		try:
 			length = float(tags['length'])
-			if length != 0:
-				scoreSafe = wayQualityScoreSafe*length + POIscoreSafe
-				scoreAttr = wayQualityScoreAttr*length + POIscoreAttr
-				scoreFast = wayQualityScoreFast*length + POIscoreFast
-			else:
-				if (not math.isinf(wayQualityScoreSafe)) and (not math.isinf(wayQualityScoreAttr)) and (not math.isinf(wayQualityScoreFast)):
-					scoreSafe = 0
-					scoreAttr = 0
-					scoreFast = 0
-				else:
-					scoreSafe = wayQualityScoreSafe
-					scoreAttr = wayQualityScoreAttr
-					scoreFast = wayQualityScoreFast
+			if length == 0:
+				wayQualityScoreSafe = 0
+				wayQualityScoreAttr = 0
+				wayQualityScoreFast = 0
+			scoreSafe = wayQualityScoreSafe*length + POIscoreSafe
+			scoreAttr = wayQualityScoreAttr*length + POIscoreAttr
+			scoreFast = wayQualityScoreFast*length + POIscoreFast
 		except (ValueError, KeyError):
-			length = 1
-			scoreSafe = wayQualityScoreSafe
-			scoreAttr = wayQualityScoreAttr
-			scoreFast = wayQualityScoreFast
+			scoreSafe = float('inf')
+			scoreAttr = float('inf')
+			scoreFast = float('inf')
 			
 		if (not math.isinf(scoreSafe)) and (not math.isinf(scoreAttr)) and (not math.isinf(wayQualityScoreFast)):
 			wayAttrs['allows_bikes'] = '1'
-			scoreSafe = max(scoreSafe, 1)
-			scoreAttr = max(scoreAttr, 1)
-			scoreFast = max(scoreFast, 1)
-			tags['score_safe'] = str(round(100*scoreSafe)/100)
-			tags['score_attr'] = str(round(100*scoreAttr)/100)
-			tags['score_fast'] = str(round(100*scoreFast)/100)
-			if length!=0:
-				tags['norm_score_safe'] = str(round(100*scoreSafe/length)/100)
-				tags['norm_score_attr'] = str(round(100*scoreAttr/length)/100)
-				tags['norm_score_fast'] = str(round(100*scoreFast/length)/100)
-				tags['norm_score'] = float(tags['norm_score_safe'])+float(tags['norm_score_attr'])+float(tags['norm_score_fast'])
+			tags['score_safe_lin'] = wayQualityScoreSafe
+			tags['score_attr_lin'] = wayQualityScoreAttr
+			tags['score_fast_lin'] = wayQualityScoreFast
+			tags['score_safe_const'] = POIscoreSafe
+			tags['score_attr_const'] = POIscoreAttr
+			tags['score_fast_const'] = POIscoreFast
 		else:
 			wayAttrs['allows_bikes'] = '0'
 		# Add direction

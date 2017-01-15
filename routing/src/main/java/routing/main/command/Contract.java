@@ -28,6 +28,8 @@ public class Contract extends Command {
 
     public boolean loadNodes() { return false; }
 
+    public boolean loadFullEdges() { return true; }
+
     public String getName() {
         return "contract";
     }

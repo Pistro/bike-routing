@@ -31,6 +31,7 @@ public class Main {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("An input file is required. Pass an input file by specifying the '-in' option");
         }
+        double accuracy = a.getDouble("accuracy", -1);
         Command [] commands = {new FindLength(), new FindLengthBatch(), new CollectInfo(),
                                 new FindLCC(), new Contract(), new FindReach(), new FindReachFloyd(),
                                 new FindLengthE(), new SelectNodes(), new FindLengthEBatch(), new FindSPGraph() };
@@ -54,7 +55,9 @@ public class Main {
         System.out.println("Reading graph...");
         XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
         XMLGraphReader gr = new XMLGraphReader();
-        if (!c.loadNodes()) gr.setDynamicNodes(true);
+        gr.setDynamicNodes(!c.loadNodes());
+        gr.setFullEdges(c.loadFullEdges());
+        gr.setAccuracy(accuracy);
         xmlReader.setContentHandler(gr);
         long start = System.currentTimeMillis();
         xmlReader.parse(convertToFileURL(inPath));

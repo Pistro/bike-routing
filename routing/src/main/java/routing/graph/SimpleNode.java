@@ -21,17 +21,10 @@ public class SimpleNode extends Node {
         this.lat = lat;
         this.lon = lon;
     }
-    public SimpleNode(Long id, double lat, double lon, double reach) {
-        super(id);
-        this.lat = lat;
-        this.lon = lon;
-        setReach(reach);
-    }
-    public SimpleNode(SimpleNode n) {
-        super(n.getId());
-        this.lat = n.lat;
-        this.lon = n.lon;
-        setReach(n.getReach());
+    public SimpleNode clone() {
+        SimpleNode out = new SimpleNode(getId(), lat, lon);
+        out.setReach(getReach());
+        return out;
     }
 
     public double getLat() {return lat; }

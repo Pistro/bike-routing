@@ -1,9 +1,12 @@
 package routing.IO;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import javafx.util.Pair;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import routing.graph.Edge;
+import routing.graph.FullEdge;
 import routing.graph.Graph;
 
 import java.io.IOException;
@@ -15,9 +18,7 @@ import java.util.*;
  */
 public class XMLGraphWriter extends DefaultHandler {
     private Set<Long> nodeWhiteList = null;
-    private HashMap<Integer, HashMap<String, String>> wayAttrUpdates = new HashMap<Integer, HashMap<String, String>>();
-    private HashMap<Integer, HashMap<String, String>> wayTagUpdates = new HashMap<Integer, HashMap<String, String>>();
-    private LinkedList<Edge> newWays = new LinkedList<Edge>();
+    private LinkedList<FullEdge> newWays = new LinkedList<>();
     private HashMap<Long, HashMap<String, String>> nodeAttrUpdates = new HashMap<Long, HashMap<String, String>>();
     private HashMap<Long, HashMap<String, String>> nodeTagUpdates = new HashMap<Long, HashMap<String, String>>();
     private HashMap<String, String> curAttrs = new HashMap<String, String>();
@@ -32,17 +33,11 @@ public class XMLGraphWriter extends DefaultHandler {
     public void setNodeWhiteList(Set<Long> whiteList) {
         this.nodeWhiteList = whiteList;
     }
-    public void setWayAttrUpdates(HashMap<Integer, HashMap<String, String>> updates) {
-        this.wayAttrUpdates = updates;
-    }
-    public void setWayTagUpdates(HashMap<Integer, HashMap<String, String>> updates) {
-        this.wayTagUpdates = updates;
-    }
     public void setNodeAttrUpdates(HashMap<Long, HashMap<String, String>> updates) { this.nodeAttrUpdates = updates; }
     public void setNodeTagUpdates(HashMap<Long, HashMap<String, String>> updates) {
         this.nodeTagUpdates = updates;
     }
-    public void setNewWays(LinkedList<Edge> newWays) {
+    public void setNewWays(LinkedList<FullEdge> newWays) {
         this.newWays = newWays;
     }
 
@@ -96,13 +91,6 @@ public class XMLGraphWriter extends DefaultHandler {
             }
             keep = (nodeWhiteList==null) || nodeWhiteList.contains(nodeId);
         } else if (qName.equals("way")) {
-            long edgeId = Long.parseLong(curAttrs.get("id"));
-            if (wayAttrUpdates.containsKey(edgeId)) {
-                curAttrs.putAll(wayAttrUpdates.get(edgeId));
-            }
-            if (wayTagUpdates.containsKey(edgeId)) {
-                curTags.putAll(wayTagUpdates.get(edgeId));
-            }
             keep = (nodeWhiteList==null)
                     || (nodeWhiteList.contains(Long.parseLong(curTags.get("start_node"))) && nodeWhiteList.contains(Long.parseLong(curTags.get("end_node"))));
         }
@@ -126,18 +114,20 @@ public class XMLGraphWriter extends DefaultHandler {
                 xmlWr.endElement(qName);
             }
         } else if (qName.equals("osm")) {
-            for (Edge e : newWays) {
+            HashMap<Integer, Pair<FullEdge, Boolean>> idToEdgeOneWay = new HashMap<>();
+            for (FullEdge e: newWays) {
+                Pair<FullEdge, Boolean> present = idToEdgeOneWay.get(e.getId());
+                if (present==null) idToEdgeOneWay.put(e.getId(), new Pair<>(e, false));
+                else if (present.getKey().getStart()==e.getStop() && present.getKey().getStop()==e.getStart()) idToEdgeOneWay.put(e.getId(), new Pair<>(e, true));
+            }
+            for (Pair<FullEdge, Boolean> p : idToEdgeOneWay.values()) {
+                FullEdge e = p.getKey();
                 curAttrs.clear();
                 curTags.clear();
+                curAttrs.put("id", Integer.toString(e.getId()));
                 curAttrs.putAll(e.getAttrs());
                 curTags.putAll(e.getTags());
-                if (nodeAttrUpdates.containsKey(e.id)) {
-                    curAttrs.putAll(wayAttrUpdates.get(e.id));
-                }
-                if (wayTagUpdates.containsKey(e.id)) {
-                    curTags.putAll(wayTagUpdates.get(e.id));
-                }
-                curTags.put("bicycle_oneway", "yes");
+                curTags.put("bicycle_oneway", p.getValue()? "0" : "1");
                 xmlWr.startElement("way", curAttrs);
                 HashMap<String, String> tmp = new HashMap<String, String>();
                 for (int i = 0; i<e.shadow.length; i++) {

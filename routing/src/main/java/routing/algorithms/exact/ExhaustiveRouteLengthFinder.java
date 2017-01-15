@@ -29,7 +29,7 @@ public class ExhaustiveRouteLengthFinder {
     // Strictness for interference
     private final double strictness;
     // Edge rounding accuracy
-    private int accuracy = 25;
+    private int accuracy;
 
     // Internal variables
     // ------------------
@@ -59,9 +59,10 @@ public class ExhaustiveRouteLengthFinder {
         return iter;
     }
 
-    public ExhaustiveRouteLengthFinder(Node start, WeightGetter wg, double lambda, double strictness, double minLength, double maxLength, SPGraph hyper) {
+    public ExhaustiveRouteLengthFinder(Node start, WeightGetter wg, int accuracy, double lambda, double strictness, double minLength, double maxLength, SPGraph hyper) {
         this.dc = new DistanceCalculator(start);
         this.wg = wg;
+        this.accuracy = accuracy;
         this.lambda = lambda;
         this.strictness = strictness;
         this.minLength = minLength;
@@ -77,10 +78,6 @@ public class ExhaustiveRouteLengthFinder {
             }
         }
         this.start = st;
-        // Round edge lengths
-        for (Node n: g.getNodes().values()) {
-            for (Edge e: n.getOutEdges()) e.scale(Math.max(Math.round(e.getLength()/accuracy), 1)*accuracy);
-        }
         // nodeToIdx
         int idx = 0;
         for (Node n: g.getNodes().values()) {
@@ -522,7 +519,11 @@ public class ExhaustiveRouteLengthFinder {
         private final double pMax;
         private double dMax;
         private double inter = 0;
+        private final double wSafe;
+        private final double wFast;
+        private final double wAttr;
         private ApproximateEdge(Path bestPath, double pMin, double pMax) {
+            super(0, bestPath.getStart(), bestPath.getEnd(), bestPath.getLength(), bestPath.getHeightDif());
             this.pMin = pMin;
             this.pMax = pMax;
             // Set shadow
@@ -533,24 +534,26 @@ public class ExhaustiveRouteLengthFinder {
             this.shadow = new int[sh.size()];
             int pos = 0;
             for (Integer i: sh) this.shadow[pos++] = i;
-            // Set start & end
-            setStart(bestPath.getStart());
-            setStop(bestPath.getEnd());
-            // Sum all other attributes
-            double l = 0, hd = 0, wF= 0, wA = 0, wS = 0;
+            // wSafe, wAttr & wFast
+            double wS = 0, wA = 0, wF = 0;
             for (Edge e: bestPath.getEdges()) {
-                l += e.getLength();
-                hd += e.getHeightDif();
-                wF += e.getWFast();
-                wA += e.getWAttr();
                 wS += e.getWSafe();
+                wA += e.getWAttr();
+                wF += e.getWFast();
             }
-            setLength(l);
-            setHeightDif(hd);
-            setWFast(wF);
-            setWAttr(wA);
-            setWSafe(wS);
+            this.wSafe = wS;
+            this.wAttr = wA;
+            this.wFast = wF;
         }
+
+        @Override
+        public double getWFast() { return wFast; }
+
+        @Override
+        public double getWAttr() { return wAttr; }
+
+        @Override
+        public double getWSafe() { return wSafe; }
     }
 
     private class NodeSchedule {

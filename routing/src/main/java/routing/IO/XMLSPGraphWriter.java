@@ -51,7 +51,7 @@ public class XMLSPGraphWriter {
         for (Node n: g.getNodes().values()) {
             for (Edge e: n.getOutEdges()) {
                 HashMap<String, String> wayAttr = new HashMap<>();
-                wayAttr.put("id", Integer.toString(e.id));
+                wayAttr.put("id", Integer.toString(e.getId()));
                 HashMap<String, String> wayTags = new HashMap<>();
                 wayTags.put("start_node", Long.toString(e.getStart().getId()));
                 wayTags.put("end_node", Long.toString(e.getStop().getId()));

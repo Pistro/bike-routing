@@ -1,6 +1,7 @@
 package routing.algorithms.exact;
 
 import routing.graph.Edge;
+import routing.graph.FullEdge;
 import routing.graph.Graph;
 import routing.graph.Node;
 
@@ -15,7 +16,7 @@ import java.util.Set;
 public class SimpleContractor {
     private boolean loops = true;
     private Set<Node> nonContractable = new HashSet<>();
-    private LinkedList <Edge> newEdges = new LinkedList<Edge>();
+    private LinkedList <FullEdge> newEdges = new LinkedList<>();
     public SimpleContractor(Graph g, boolean loops, Set<Node> nonContractable) {
         this.loops = loops;
         this.nonContractable = nonContractable;
@@ -38,10 +39,10 @@ public class SimpleContractor {
             }
             if (!nonContractable.contains(current)) {
                 if (current.getInEdges().size() == 1 && current.getOutEdges().size() == 1) {
-                    Edge ei = current.getInEdges().get(0);
-                    Edge eo = current.getOutEdges().get(0);
+                    FullEdge ei = (FullEdge) current.getInEdges().get(0);
+                    FullEdge eo = (FullEdge) current.getOutEdges().get(0);
                     if (ei != eo) {
-                        Edge e_new = Edge.join(ei, eo);
+                        FullEdge e_new = FullEdge.join(ei, eo);
                         newEdges.add(e_new);
                         ei.decouple();
                         eo.decouple();
@@ -51,23 +52,28 @@ public class SimpleContractor {
                         }
                     }
                 } else if (current.getInEdges().size() == 2 && current.getOutEdges().size() == 2) {
-                    Edge ei1 = current.getInEdges().get(0);
+                    FullEdge ei1 = (FullEdge) current.getInEdges().get(0);
                     Node ni1 = ei1.getStart();
-                    Edge ei2 = current.getInEdges().get(1);
+                    FullEdge ei2 = (FullEdge) current.getInEdges().get(1);
                     Node ni2 = ei2.getStart();
-                    Edge eo1 = current.getOutEdges().get(0);
+                    FullEdge eo1 = (FullEdge) current.getOutEdges().get(0);
                     Node no1 = eo1.getStop();
-                    Edge eo2 = current.getOutEdges().get(1);
+                    FullEdge eo2 = (FullEdge) current.getOutEdges().get(1);
                     Node no2 = eo2.getStop();
                     // Check whether simple contraction is possible
                     if (((ni1 == no1 && ni2 == no2) || (ni1 == no2 && ni2 == no1)) && ni1 != current && ni2 != current) {
+                        FullEdge en1, en2;
                         if (ni1 == no1 && ni2 == no2) {
-                            newEdges.add(Edge.join(ei1, eo2));
-                            newEdges.add(Edge.join(ei2, eo1));
+                            en1 = FullEdge.join(ei1, eo2);
+                            if (ei1.getId()==eo1.getId() && eo2.getId()==ei2.getId()) en2 = FullEdge.join(en1.getId(), ei2, eo1);
+                            else en2 = FullEdge.join(en1.getId(), ei2, eo1);
                         } else {
-                            newEdges.add(Edge.join(ei1, eo1));
-                            newEdges.add(Edge.join(ei2, eo2));
+                            en1 = FullEdge.join(ei1, eo1);
+                            if (ei1.getId()==eo2.getId() && eo1.getId()==ei2.getId()) en2 = FullEdge.join(en1.getId(), ei2, eo2);
+                            else en2 = FullEdge.join(ei2, eo2);
                         }
+                        newEdges.add(en1);
+                        newEdges.add(en2);
                         ei1.decouple();
                         ei2.decouple();
                         eo1.decouple();
@@ -77,12 +83,12 @@ public class SimpleContractor {
                 }
             }
         }
-        for (Iterator<Edge> it = newEdges.listIterator(); it.hasNext(); ) {
+        for (Iterator<FullEdge> it = newEdges.listIterator(); it.hasNext(); ) {
             Edge current = it.next();
             if (current.getStart() == null) it.remove();
         }
     }
-    public LinkedList<Edge> getNewEdges() {
+    public LinkedList<FullEdge> getNewEdges() {
         return newEdges;
     }
 }

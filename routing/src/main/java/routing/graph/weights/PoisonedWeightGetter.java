@@ -123,27 +123,26 @@ public class PoisonedWeightGetter {
         double pLength = p.getLength();
         ArrayList<ApproximateEdge> app = new ArrayList<>();
         double pMax = 0;
-        LinkedList<Edge> stored = new LinkedList<>();
+        Path s = new Path((Node) null);
+        LinkedList<Edge> stored = s.getEdges();
         double pMin = p.getEdges().getFirst().getLength()/2;
-        int appEdgeNr = 0;
         for (Edge e: p.getEdges()) {
             pMax += e.getLength()/2;
             stored.add(e);
-            ApproximateEdge ap = new ApproximateEdge(stored, pMin);
+            ApproximateEdge ap = new ApproximateEdge(s, pMin);
             double dExp = Math.min(pMin, pLength-pMax) * strictness_prod;
             double match = (dExp - ap.dMax) / dExp;
             if (match<t) {
                 stored.pollLast();
-                ap = new ApproximateEdge(stored, pMin);
+                ap = new ApproximateEdge(s, pMin);
                 app.add(ap);
-                ap.id = appEdgeNr++;
                 stored.clear();
                 stored.add(e);
                 pMin = pMax;
             }
             pMax += e.getLength()/2;
         }
-        if (!stored.isEmpty()) app.add(new ApproximateEdge(stored, pMin));
+        if (!stored.isEmpty()) app.add(new ApproximateEdge(s, pMin));
         return app;
     }
     public double getWeight(Edge current, double currentStopToStart) {
@@ -159,27 +158,26 @@ public class PoisonedWeightGetter {
         public final double pMax;
         public final double dMax;
 
-        private ApproximateEdge(LinkedList<Edge> edges, double pMin) {
+        private ApproximateEdge(Path p, double pMin) {
+            super(0, p.getEdges().getFirst().getStart(), p.getEnd(), p.getLength(), 0);
             this.pMin = pMin;
-            // Start & end
-            Edge first = edges.getFirst();
-            Node start = first.getStart();
-            setStart(start);
-            Edge last = edges.getLast();
-            Node stop = last.getStop();
-            setStop(stop);
             // dMax
             double dMax = 0;
-            Node center = new SimpleNode((start.getLat()+stop.getLat())/2, (start.getLon()+stop.getLon())/2);
-            for (Edge e: edges) dMax = Math.max(dMax, dc.getDistance(e, center));
+            Node center = new SimpleNode((getStart().getLat()+getStop().getLat())/2, (getStart().getLon()+getStop().getLon())/2);
+            for (Edge e: p.getEdges()) dMax = Math.max(dMax, dc.getDistance(e, center));
             this.dMax = dMax;
-            // length
-            double l = 0;
-            for (Edge e: edges) l += e.getLength();
-            setLength(l);
             // pMax
-            this.pMax = pMin - first.getLength()/2 + l - last.getLength()/2;
+            this.pMax = pMin - p.getEdges().getFirst().getLength()/2 + getLength() - p.getEdges().getLast().getLength()/2;
         }
         double getPAvg() { return (pMin+pMax)/2; }
+
+        @Override
+        public double getWFast() { return 0; }
+
+        @Override
+        public double getWAttr() { return 0; }
+
+        @Override
+        public double getWSafe() { return 0; }
     }
 }

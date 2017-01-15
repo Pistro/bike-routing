@@ -95,7 +95,7 @@ public class Graph {
         for (Map.Entry<Node, Double> nd: forwardLens.entrySet()) {
             Double backwardLen = backwardLens.get(nd.getKey());
             if (backwardLen!=null && nd.getValue()+backwardLen<=len) {
-                out.addNode(new SimpleNode((SimpleNode) nd.getKey()));
+                out.addNode(nd.getKey().clone());
             }
         }
         for (Node n: forwardLens.keySet()) {
@@ -104,8 +104,7 @@ public class Graph {
                 for (Edge e: n.getOutEdges()) {
                     Node n1 = out.getNode(e.getStop().getId());
                     if (n1!=null) {
-                        Edge e_new = new Edge(e, n0, n1);
-                        e_new.id = e.id;
+                        new SimpleEdge(e, n0, n1);
                     }
                 }
             }

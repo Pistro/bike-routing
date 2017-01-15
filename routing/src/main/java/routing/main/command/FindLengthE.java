@@ -32,6 +32,7 @@ public class FindLengthE extends Command {
     private double reach;
     private long time;
     private String hyperIn;
+    private int accuracy;
 
     public FindLengthE() {}
 
@@ -49,6 +50,7 @@ public class FindLengthE extends Command {
         minLength = ap.getDouble("minLength");
         maxLength = ap.getDouble("maxLength");
         out = ap.getString("out");
+        accuracy = ap.getInt("accuracy");
         // Choice
         hyperIn = ap.getString("hyperIn", null);
         reach = ap.getDouble("reach", -1);
@@ -88,7 +90,7 @@ public class FindLengthE extends Command {
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }
             System.out.println("Starting routing (length: " + minLength/1000. + "-" + maxLength/1000. + "km)...");
-            ExhaustiveRouteLengthFinder rlf = new ExhaustiveRouteLengthFinder(g.getNode(startId), wb, lambda, s, minLength, maxLength, g2);
+            ExhaustiveRouteLengthFinder rlf = new ExhaustiveRouteLengthFinder(g.getNode(startId), wb, accuracy, lambda, s, minLength, maxLength, g2);
             rlf.maxSearchTimeMs = time;
             start = System.currentTimeMillis();
             Path p = rlf.findRoute();

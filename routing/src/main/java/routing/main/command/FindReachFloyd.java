@@ -8,6 +8,7 @@ import routing.graph.Graph;
 import routing.graph.Node;
 import routing.graph.weights.WeightBalancer;
 import routing.main.ArgParser;
+import routing.main.DefaultParameters;
 import routing.main.Main;
 
 import javax.xml.parsers.SAXParserFactory;
@@ -37,7 +38,7 @@ public class FindReachFloyd extends Command {
     protected void initialize(ArgParser ap) {
         out = ap.getString("out");
         in = Main.convertToFileURL(ap.getString("in"));
-        wb = new WeightBalancer(ap.getDouble("wFast", 0.25), ap.getDouble("wAttr", 0.25), ap.getDouble("wSafe", 0.25));
+        wb = new WeightBalancer(ap.getDouble("wFast", DefaultParameters.WFAST), ap.getDouble("wAttr", DefaultParameters.WATTR), ap.getDouble("wSafe", DefaultParameters.WSAFE));
     }
 
     public void execute(Graph g) {
@@ -45,20 +46,20 @@ public class FindReachFloyd extends Command {
         long start = System.currentTimeMillis();
         ReachFinder r = new ReachFinder(g, wb);
         long stop = System.currentTimeMillis();
-        System.out.println("Reaches calculated! Reach calculation time: " + (stop-start)/1000.0 + "s");
+        System.out.println("Reaches calculated! Reach calculation time: " + (stop-start)/1000. + "s");
         System.out.println("Preparing reaches for writing...");
         start = System.currentTimeMillis();
         HashMap<Long, HashMap<String, String>> reachesAttr = new HashMap<Long, HashMap<String, String>>();
         HashMap<Node, ReachFinder.ReachValues> reaches = r.getReaches();
         for (Map.Entry<Node, ReachFinder.ReachValues> en: reaches.entrySet()) {
             HashMap<String, String> tmp = new HashMap<String, String>();
-            tmp.put("wReach", Double.toString(Math.round(en.getValue().weight*100)/100.0));
-            tmp.put("lReach", Double.toString(Math.round(en.getValue().length*100)/100.0));
-            tmp.put("dReach", Double.toString(Math.ceil(en.getValue().dist*100)/100.0));
+            tmp.put("wReach", Double.toString(Math.round(en.getValue().weight*100)/100.));
+            tmp.put("lReach", Double.toString(Math.round(en.getValue().length*100)/100.));
+            tmp.put("dReach", Double.toString(Math.ceil(en.getValue().dist*100)/100.));
             reachesAttr.put(en.getKey().getId(), tmp);
         }
         stop = System.currentTimeMillis();
-        System.out.println("Reaches prepared! Preparation time: " + (stop-start)/1000.0 + "s");
+        System.out.println("Reaches prepared! Preparation time: " + (stop-start)/1000. + "s");
         System.out.println("Writing reaches...");
         start = System.currentTimeMillis();
         try {
@@ -72,6 +73,6 @@ public class FindReachFloyd extends Command {
             // XML parser exceptions and stuff. Should never occur...
         }
         stop = System.currentTimeMillis();
-        System.out.println("Reaches written! Writing time: " + (stop-start)/1000.0 + "s");
+        System.out.println("Reaches written! Writing time: " + (stop-start)/1000. + "s");
     }
 }

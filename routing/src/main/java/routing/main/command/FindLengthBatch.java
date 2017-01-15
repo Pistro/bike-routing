@@ -13,6 +13,7 @@ import routing.algorithms.heuristics.RouteLengthFinder;
 import routing.graph.*;
 import routing.graph.weights.WeightBalancer;
 import routing.main.ArgParser;
+import routing.main.DefaultParameters;
 import routing.main.Main;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -61,11 +62,11 @@ public class FindLengthBatch extends Command {
         reach = ap.getDouble("reach", -1);
         if (hyperIn==null && reach==-1) throw new IllegalArgumentException("Either reach or hyperIn should be specified!");
         // Optionals
-        beta = ap.getDouble("beta", 0.6);
-        alternatives = ap.getInt("alt", 4);
-        wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 0.5), ap.getDouble("wSafe", 0.5));
-        lambda = ap.getDouble("lambda", 12);
-        strictness = ap.getDouble("strictness", 0.4);
+        beta = ap.getDouble("beta", DefaultParameters.BETA);
+        alternatives = ap.getInt("alt", DefaultParameters.ALTERNATIVES);
+        wb = new WeightBalancer(ap.getDouble("wFast", DefaultParameters.WFAST), ap.getDouble("wAttr", DefaultParameters.WATTR), ap.getDouble("wSafe", DefaultParameters.WSAFE));
+        lambda = ap.getDouble("lambda", DefaultParameters.LAMBDA);
+        strictness = ap.getDouble("strictness", DefaultParameters.STRICTNESS);
     }
 
     public void execute(Graph g) {

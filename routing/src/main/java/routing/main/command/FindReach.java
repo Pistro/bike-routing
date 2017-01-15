@@ -11,6 +11,7 @@ import routing.graph.Node;
 import routing.graph.SPGraph;
 import routing.graph.weights.WeightBalancer;
 import routing.main.ArgParser;
+import routing.main.DefaultParameters;
 import routing.main.Main;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -25,7 +26,6 @@ import java.util.Map;
 public class FindReach extends Command {
     private String hyperOut;
     private WeightBalancer wb;
-    private WeightBalancer wbReach;
     private double maxLength;
     private String hyperIn;
     private double reach;
@@ -51,9 +51,8 @@ public class FindReach extends Command {
         reach = ap.getDouble("reach", -1);
         if (hyperIn==null && reach==-1) throw new IllegalArgumentException("Either reach or hyperIn should be specified!");
         // Optional
-        wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 1), ap.getDouble("wSafe", 1));
-        wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
-        nrThreads = ap.getInt("threads", 16);
+        wb = new WeightBalancer(ap.getDouble("wFast", DefaultParameters.WFAST), ap.getDouble("wAttr", DefaultParameters.WATTR), ap.getDouble("wSafe", DefaultParameters.WSAFE));
+        nrThreads = ap.getInt("threads", DefaultParameters.THREADS);
     }
 
     public void execute(Graph g) {
@@ -73,7 +72,7 @@ public class FindReach extends Command {
             } else {
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                g2 = new SPGraph(g, reach, true, wbReach);
+                g2 = new SPGraph(g, reach, true, wb);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }

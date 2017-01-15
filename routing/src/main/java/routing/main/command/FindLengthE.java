@@ -13,6 +13,7 @@ import routing.graph.SPGraph;
 import routing.graph.weights.WeightBalancer;
 import routing.main.ArgParser;
 import routing.main.Main;
+import routing.main.DefaultParameters;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
@@ -56,9 +57,9 @@ public class FindLengthE extends Command {
         reach = ap.getDouble("reach", -1);
         if (hyperIn==null && reach==-1) throw new IllegalArgumentException("Either reach or hyperIn should be specified!");
         // Optionals
-        wb = new WeightBalancer(ap.getDouble("wFast", 0), ap.getDouble("wAttr", 0.5), ap.getDouble("wSafe", 0.5));
-        s = ap.getDouble("s", 0.4);
-        lambda = ap.getDouble("lambda", 12);
+        wb = new WeightBalancer(ap.getDouble("wFast", DefaultParameters.WFAST), ap.getDouble("wAttr", DefaultParameters.WATTR), ap.getDouble("wSafe", DefaultParameters.WSAFE));
+        s = ap.getDouble("s", DefaultParameters.STRICTNESS);
+        lambda = ap.getDouble("lambda", DefaultParameters.LAMBDA);
         time = ap.getLong("time", -1);
     }
 

@@ -8,6 +8,7 @@ import routing.graph.Node;
 import routing.graph.SPGraph;
 import routing.graph.weights.WeightBalancer;
 import routing.main.ArgParser;
+import routing.main.DefaultParameters;
 import routing.main.Main;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,7 +21,7 @@ import java.util.Map;
  * Created by piete on 27/12/2016.
  */
 public class CollectInfo extends Command {
-    private WeightBalancer wbReach;
+    private WeightBalancer wReach;
     private double reach;
     private String hyperIn;
 
@@ -38,7 +39,7 @@ public class CollectInfo extends Command {
         // Optional arguments
         hyperIn = ap.getString("hyperIn", null);
         reach = ap.getDouble("reach", -1);
-        wbReach = new WeightBalancer(ap.getDouble("wbFast", 0.5), ap.getDouble("wbAttr", 0.25), ap.getDouble("wbSafe", 0.25));
+        wReach = new WeightBalancer(ap.getDouble("wFast", DefaultParameters.WFAST), ap.getDouble("wAttr", DefaultParameters.WATTR), ap.getDouble("wSafe", DefaultParameters.WSAFE));
     }
 
     public void execute(Graph g) {
@@ -57,7 +58,7 @@ public class CollectInfo extends Command {
             } else if (reach != -1) {
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                g = new SPGraph(g, reach, true, wbReach);
+                g = new SPGraph(g, reach, true, wReach);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop - start) / 1000. + "s");
             }

@@ -9,6 +9,7 @@ import routing.graph.Node;
 import routing.graph.SPGraph;
 import routing.graph.weights.WeightBalancer;
 import routing.main.ArgParser;
+import routing.main.DefaultParameters;
 import routing.main.Main;
 
 import javax.xml.parsers.SAXParserFactory;
@@ -18,13 +19,11 @@ import java.util.LinkedList;
 import java.util.Set;
 
 /**
- * Created by piete on 15/12/2016.
+ * Created by pieter on 15/12/2016.
  */
 public class FindSPGraph extends Command{
     private double reach;
-    private double wAttr;
-    private double wSafe;
-    private double wFast;
+    private WeightBalancer wb;
     private boolean bi;
     private String out;
     public FindSPGraph() {}
@@ -41,9 +40,7 @@ public class FindSPGraph extends Command{
         out = ap.getString("out");
         reach = ap.getDouble("reach");
         // Optionals
-        wAttr = ap.getDouble("wAttr", 1.0/6);
-        wSafe = ap.getDouble("wSafe", 1.0/6);
-        wFast = ap.getDouble("wSafe", 1.0/3);
+        wb = new WeightBalancer(ap.getDouble("wFast", DefaultParameters.WFAST), ap.getDouble("wAttr", DefaultParameters.WATTR), ap.getDouble("wSafe", DefaultParameters.WSAFE));
         bi = ap.getInt("bi", 1) != 0;
     }
 
@@ -52,7 +49,7 @@ public class FindSPGraph extends Command{
     public void execute(Graph g) {
         System.out.println("Extracting SPGraph (reach: " + reach + ")...");
         long start = System.currentTimeMillis();
-        SPGraph g2 = new SPGraph(g, reach, bi, new WeightBalancer(wFast, wAttr, wSafe));
+        SPGraph g2 = new SPGraph(g, reach, bi, wb);
         long stop = System.currentTimeMillis();
         System.out.println("SPGraph extracted! Extraction time: " + 1.0 * (stop - start) / 1000 + "s");
         System.out.println("Original graph order: " + g.getNodes().size() + ", SPGraph order: " + g2.getNodes().size() + ", relative: " + ((float) g2.getNodes().size() / g.getNodes().size()));

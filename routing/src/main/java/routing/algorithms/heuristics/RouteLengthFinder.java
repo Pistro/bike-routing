@@ -183,7 +183,7 @@ public class RouteLengthFinder {
                         forwardStop = e.getStop();
                     }
                     if (minLength<=curStopInfo.length+curCan.length+epsilon && curStopInfo.length+curCan.length<=maxLength+epsilon &&
-                            (curCan.node.getEdgeFromParent()==null || curCan.node.getEdgeFromParent().getStart()!=curStopInfo.penultimate)) {
+                            (curCan.node.getEdgeFromParent()==null || ((SPGraph.NodePair) curCan.node.getEdgeFromParent().getStop()).e!=((SPGraph.NodePair) curStopInfo.penultimate).e)) {
                         Path returnPath = curCan.node.getPathFromRoot();
                         returnPath.flipForward();
                         Path forwardPart = new Path(forwardPath);

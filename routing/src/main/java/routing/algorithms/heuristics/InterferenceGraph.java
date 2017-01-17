@@ -162,7 +162,7 @@ public class InterferenceGraph {
             double d_exp = 2*strictness/Math.PI*pDist;
             double d_exp_dec = d_exp-cur.e.d_max;
             double d2 = dc.getDistance2(in.e, cur.e);
-            if (d2<d_exp_dec*d_exp_dec) {
+            if (d_exp_dec>0 && d2<d_exp_dec*d_exp_dec) {
                 double d = dc.getDistance(in.e, cur.e) + cur.e.d_max;
                 if (d<d_exp) interference += (d_exp-d)/d_exp*(cur.e.getLength()*in.e.getLength());
             }

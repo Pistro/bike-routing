@@ -42,7 +42,7 @@ public class DistanceCalculator {
     public double getDistance(double lat0, double lon0, double lat1, double lon1) {
         double latDif = latScale*(lat0-lat1);
         double lonDif = lonScale*(lon0-lon1);
-        return Math.round(Math.sqrt(latDif*latDif+lonDif*lonDif)*100)/100.;
+        return Math.sqrt(latDif*latDif+lonDif*lonDif);
     }
     public double getDistance2(Edge e0, Edge e1) {
         double lat0 = (e0.getStart().getLat()+e0.getStop().getLat())/2;

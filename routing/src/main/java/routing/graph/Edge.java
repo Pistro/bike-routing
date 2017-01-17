@@ -1,11 +1,10 @@
 package routing.graph;
 
 import java.util.HashMap;
-import java.util.StringJoiner;
 
 /**
  * This class represents a directed graph-edge.
- * Created by pieter on 18/04/2016.
+ * Created by Pieter on 18/04/2016.
  */
 public abstract class Edge {
     private static int idCnt;
@@ -37,8 +36,7 @@ public abstract class Edge {
         stop = null;
     }
     public HashMap<String, String> getAttrs() {
-        HashMap<String, String> out = new HashMap<>();
-        return out;
+        return new HashMap<>();
     }
     public double getLength() { return length; }
     public double getHeightDif() { return heightDif; }

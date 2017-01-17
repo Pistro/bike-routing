@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 
 /**
- * Created by pieter on 5/06/2016.
+ * Created by Pieter on 5/06/2016.
  */
 public class FindLength extends Command {
     private WeightBalancer wb;

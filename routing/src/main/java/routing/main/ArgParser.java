@@ -3,7 +3,7 @@ package routing.main;
 import java.util.HashMap;
 
 /**
- * Created by pieter on 4/06/2016.
+ * Created by Pieter on 4/06/2016.
  */
 public class ArgParser {
     private HashMap<String, String> options = new HashMap<String, String>();

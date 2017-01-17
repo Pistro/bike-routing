@@ -1,7 +1,7 @@
 package routing.main;
 
 /**
- * Created by piete on 15/01/2017.
+ * Created by Pieter on 15/01/2017.
  */
 public class DefaultParameters {
     public static double STRICTNESS = 0.4;

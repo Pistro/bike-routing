@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by piete on 6/06/2016.
+ * Created by Pieter on 6/06/2016.
  */
 public class FindReach extends Command {
     private String hyperOut;

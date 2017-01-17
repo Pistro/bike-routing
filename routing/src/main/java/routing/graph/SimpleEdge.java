@@ -1,7 +1,7 @@
 package routing.graph;
 
 /**
- * Created by piete on 14/01/2017.
+ * Created by Pieter on 14/01/2017.
  */
 public class SimpleEdge extends Edge {
     private final double wFast;

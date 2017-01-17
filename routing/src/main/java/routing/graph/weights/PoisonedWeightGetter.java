@@ -7,7 +7,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 /**
- * Created by piete on 11/12/2016.
+ * Returns weights of edges, increased with the estimated interference of a given forward path, l_max, strictness and lambda
+ * Created by Pieter on 11/12/2016.
  */
 public class PoisonedWeightGetter {
     private final WeightGetter wg;

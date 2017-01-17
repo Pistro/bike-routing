@@ -13,7 +13,7 @@ import routing.graph.weights.WeightGetter;
 import java.util.*;
 
 /**
- *
+ * Dijkstra's algorithm with one or multiple beginning nodes and for source and sink trees
  * @author Pieter
  */
 public class Dijkstra {

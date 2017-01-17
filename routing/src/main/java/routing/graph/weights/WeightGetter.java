@@ -4,7 +4,8 @@ import routing.graph.Edge;
 import routing.graph.Tree;
 
 /**
- * Created by piete on 23/11/2015.
+ * Interface of all classes that allow to retrieve edge costs
+ * Created by Pieter on 23/11/2015.
  */
 public interface WeightGetter {
     double getWeight(Edge current);

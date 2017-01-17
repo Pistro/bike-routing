@@ -12,7 +12,7 @@ import java.util.LinkedList;
 
 /**
  *
- * @author piete
+ * @author Pieter
  */
 public abstract class Node {
     private static long idCnt;

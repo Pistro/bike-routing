@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.Map;
 
 /**
- * Created by pieter on 5/06/2016.
+ * Created by Pieter on 5/06/2016.
  */
 public class FindLengthBatch extends Command {
     private WeightBalancer wb;

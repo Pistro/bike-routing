@@ -14,7 +14,7 @@ import java.io.InterruptedIOException;
 import java.util.*;
 
 /**
- * Created by pieter on 27/02/2016.
+ * Created by Pieter on 27/02/2016.
  */
 public class XMLGraphWriter extends DefaultHandler {
     private Set<Long> nodeWhiteList = null;

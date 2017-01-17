@@ -20,7 +20,7 @@ import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 
 /**
- * Created by pieter on 5/06/2016.
+ * Created by Pieter on 5/06/2016.
  */
 public class FindLengthE extends Command {
     private WeightBalancer wb;

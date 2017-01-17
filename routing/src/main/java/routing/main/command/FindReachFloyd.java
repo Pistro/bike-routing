@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by pieter on 6/06/2016.
+ * Created by Pieter on 6/06/2016.
  */
 public class FindReachFloyd extends Command {
     private String in;
@@ -50,12 +50,10 @@ public class FindReachFloyd extends Command {
         System.out.println("Preparing reaches for writing...");
         start = System.currentTimeMillis();
         HashMap<Long, HashMap<String, String>> reachesAttr = new HashMap<Long, HashMap<String, String>>();
-        HashMap<Node, ReachFinder.ReachValues> reaches = r.getReaches();
-        for (Map.Entry<Node, ReachFinder.ReachValues> en: reaches.entrySet()) {
+        HashMap<Node, Double> reaches = r.getReaches();
+        for (Map.Entry<Node, Double> en: reaches.entrySet()) {
             HashMap<String, String> tmp = new HashMap<String, String>();
-            tmp.put("wReach", Double.toString(Math.round(en.getValue().weight*100)/100.));
-            tmp.put("lReach", Double.toString(Math.round(en.getValue().length*100)/100.));
-            tmp.put("dReach", Double.toString(Math.ceil(en.getValue().dist*100)/100.));
+            tmp.put("reach", Double.toString(Math.ceil(en.getValue()*100)/100.));
             reachesAttr.put(en.getKey().getId(), tmp);
         }
         stop = System.currentTimeMillis();

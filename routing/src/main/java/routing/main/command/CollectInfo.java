@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by piete on 27/12/2016.
+ * Created by Pieter on 27/12/2016.
  */
 public class CollectInfo extends Command {
     private WeightBalancer wReach;

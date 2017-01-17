@@ -10,19 +10,9 @@ import java.util.HashMap;
  * Created by pieter on 29/02/2016.
  */
 public class ReachFinder extends FloydWarshall {
+    private static final double epsilon = 0.00001;
 
-    public class ReachValues {
-        public double weight;
-        public double length;
-        public double dist;
-        private ReachValues(double weight, double length, double dist) {
-            this.weight = weight;
-            this.length = length;
-            this.dist = dist;
-        }
-    }
-
-    private HashMap<Node, ReachValues> reaches = new HashMap<>();
+    private HashMap<Node, Double> reaches = new HashMap<>();
     public ReachFinder(Graph g, WeightGetter wg) {
         super(g, wg);
         HashMap<Long, Node> nodes = g.getNodes();
@@ -37,25 +27,21 @@ public class ReachFinder extends FloydWarshall {
             }
         }
         for (int k = 0; k<nrNodes; k++) {
-            double maxWeight = 0;
             double maxLength = 0;
-            double maxDist = 0;
             for (int i = 0; i<nrNodes; i++) {
-                if (lengths[i][k]>maxLength || distances[i][k]>maxWeight) {
+                if (lengths[i][k]>maxLength) {
                     for (int j = 0; j<nrNodes; j++) {
-                        if (Math.abs(distances[i][k] + distances[k][j] - distances[i][j])<0.01) {
+                        if (Math.abs(costs[i][k] + costs[k][j] - costs[i][j])<epsilon) {
                             // k is on the shortest path between i and j
-                            maxWeight = Math.max(maxWeight, Math.min(distances[i][k], distances[k][j]));
                             maxLength = Math.max(maxLength, Math.min(lengths[i][k], lengths[k][j]));
-                            maxDist = Math.max(maxDist, Math.min(mapDist[i][k], mapDist[k][j]));
                         }
                     }
                 }
             }
-            reaches.put(reverseMapping[k], new ReachValues(maxWeight, maxLength, maxDist));
+            reaches.put(reverseMapping[k], maxLength);
         }
     }
-    public HashMap<Node, ReachValues> getReaches() {
+    public HashMap<Node, Double> getReaches() {
         return reaches;
     }
 }

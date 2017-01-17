@@ -13,7 +13,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 
 /**
- * Created by piete on 18/04/2016.
+ * Created by Pieter on 18/04/2016.
  */
 public abstract class CandidateSelector {
     protected Random r = new Random();

@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 /**
- * Created by pieter on 5/06/2016.
+ * Created by Pieter on 5/06/2016.
  */
 public class FindLengthEBatch extends Command {
     private WeightBalancer wb;

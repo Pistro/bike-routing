@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by pieter on 6/06/2016.
+ * Created by Pieter on 6/06/2016.
  */
 public class SelectNodes extends Command {
     private String out;

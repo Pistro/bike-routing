@@ -4,7 +4,7 @@ import routing.graph.Edge;
 
 /**
  * Calculate edge weight based on user defined preferences
- * Created by piete on 18/04/2016.
+ * Created by Pieter on 18/04/2016.
  */
 public class WeightBalancer implements WeightGetter {
     private double wFast;

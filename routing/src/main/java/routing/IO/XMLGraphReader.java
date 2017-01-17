@@ -15,7 +15,7 @@ import routing.graph.*;
 
 /**
  *
- * @author pieter
+ * @author Pieter
  */
 public class XMLGraphReader extends DefaultHandler {
     private final Graph graph = new Graph();

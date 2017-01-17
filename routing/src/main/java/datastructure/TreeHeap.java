@@ -1,37 +1,24 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package datastructure;
 
 import java.util.*;
 
 /**
- *
- * @author pieter
- * @param <T>
+ * Datastructure that allows to add, update and extract minimum elements in O(log(n))
+ * @author Pieter
+ * @param <T> The type of elements that is stored in the datastructure
  */
 public class TreeHeap<T> {
-    private final HashMap<Long, TreeHeapElement<T>> idToEl = new HashMap<Long, TreeHeapElement<T>>();
-    private final TreeMap<Double, ArrayList<TreeHeapElement<T>>> wToEl = new TreeMap<Double, ArrayList<TreeHeapElement<T>>>();
-
-    public boolean isEmpty() {
-        return idToEl.isEmpty();
-    }
-
-    public Set<T> getElements() {
-        Set<T> out = new HashSet<T>();
-        for (TreeHeapElement<T> el : idToEl.values()) {
-            out.add(el.o);
-        }
-        return out;
-    }
+    private final HashMap<Long, TreeHeapElement<T>> idToEl = new HashMap<>();
+    private final TreeMap<Double, ArrayList<TreeHeapElement<T>>> wToEl = new TreeMap<>();
     
     public TreeHeap() {}
+
+    // Add an element to the tree in O(log(n))
+    // A weight is provided to order added elements
+    // If an element with the provided id is present, the element will be stored with the minimum of the present and the new weight
     public TreeHeapElement<T> add(Long id, Double w, T o) {
         TreeHeapElement<T> el = idToEl.get(id);
-        TreeHeapElement<T> el_new = new TreeHeapElement<T>(id, w, o);
+        TreeHeapElement<T> el_new = new TreeHeapElement<>(id, w, o);
         if (el!=null) {
             if (w<el.weight) {
                 removeFromTreeMap(el);
@@ -43,21 +30,19 @@ public class TreeHeap<T> {
         addToTreeMap(el_new);
         return el;
     }
-    
+
+    // Get the number of elements in the datastructure
     public int size() {
         return idToEl.size();
     }
-    
+
+    // Extract an element with minimum weight in O(log(n))
     public TreeHeapElement<T> extractMin() {
         Double minWeight = wToEl.firstKey();
         TreeHeapElement<T> out = wToEl.get(minWeight).get(0);
         removeFromTreeMap(out);
         idToEl.remove(out.id);
         return out;
-    }
-
-    public double minWeight() {
-        return wToEl.firstKey();
     }
     
     private void addToTreeMap(TreeHeapElement<T> the) {
@@ -74,7 +59,8 @@ public class TreeHeap<T> {
             wToEl.remove(the.weight);
         }
     }
-    
+
+    // stuct that holds the stored element with it's weight and id
     public static class TreeHeapElement<T> {
         public Long id;
         public Double weight;

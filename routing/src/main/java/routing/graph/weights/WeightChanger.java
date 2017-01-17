@@ -13,7 +13,7 @@ import java.util.Map;
 
 /**
  * This class emulates changed weights of graph edges, without actually updating the graph
- * Created by pieter on 29/11/2015.
+ * Created by Pieter on 29/11/2015.
  */
 public class WeightChanger implements WeightGetter {
     private WeightGetter wg;

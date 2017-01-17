@@ -1,16 +1,10 @@
 package routing.main;
 
-import org.json.simple.JSONArray;
-
 import java.io.*;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.json.simple.JSONObject;
 import org.xml.sax.XMLReader;
-import routing.IO.JsonWriter;
-import routing.IO.NodeWriter;
 import routing.IO.XMLGraphReader;
-import routing.graph.*;
 import routing.main.command.*;
 
 public class Main {

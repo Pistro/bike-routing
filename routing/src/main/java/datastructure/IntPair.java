@@ -1,7 +1,8 @@
 package datastructure;
 
 /**
- * Created by piete on 30/11/2016.
+ * Struct that holds an ordered pair of ints, two struct are equal if the ints are equal
+ * Created by Pieter on 30/11/2016.
  */
 public class IntPair {
     private int i1;

@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by piete on 22/11/2016.
+ * Created by Pieter on 22/11/2016.
  */
 public class NodeWriter {
     private final HashMap<Node, HashMap<String, Object>> nodes;

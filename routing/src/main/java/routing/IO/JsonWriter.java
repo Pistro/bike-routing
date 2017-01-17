@@ -6,7 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- * Created by piete on 13/12/2015.
+ * Created by Pieter on 13/12/2015.
  */
 public class JsonWriter {
     JSONObject j;

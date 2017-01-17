@@ -3,7 +3,7 @@ package routing.algorithms.candidateselection;
 import routing.graph.Tree;
 
 /**
- * Created by piete on 18/04/2016.
+ * Created by Pieter on 18/04/2016.
  */
 public class Candidate {
     public Tree.TreeNode node;

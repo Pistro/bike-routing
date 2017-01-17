@@ -8,7 +8,7 @@ import java.util.*;
 
 /**
  * Tarjans algorithm
- * Created by pieter on 27/02/2016.
+ * Created by Pieter on 27/02/2016.
  */
 public class ComponentDiscovery {
     private Stack<Node> s = new Stack<>();

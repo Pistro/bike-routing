@@ -19,7 +19,7 @@ import java.util.LinkedList;
 import java.util.Set;
 
 /**
- * Created by pieter on 15/12/2016.
+ * Created by Pieter on 15/12/2016.
  */
 public class FindSPGraph extends Command{
     private double reach;

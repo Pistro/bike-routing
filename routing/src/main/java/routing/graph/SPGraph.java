@@ -10,7 +10,7 @@ import java.util.*;
 
 /**
  * Creates a graph in which only paths are present that are least cost according to the nodes encountered a last number of meters.
- * Created by pieter on 24/10/2016.
+ * Created by Pieter on 24/10/2016.
  */
 public class SPGraph extends Graph {
     private double reach;

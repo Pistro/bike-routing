@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created by pieter on 27/02/2016.
+ * Created by Pieter on 27/02/2016.
  */
 public class XMLSPGraphWriter {
     private final XMLWriter xmlWr;

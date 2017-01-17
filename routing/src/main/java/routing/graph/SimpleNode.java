@@ -1,7 +1,7 @@
 package routing.graph;
 
 /**
- * Created by piete on 30/10/2016.
+ * Created by Pieter on 30/10/2016.
  */
 public class SimpleNode extends Node {
     private final double lat;

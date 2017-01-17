@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 /**
- * Created by pieter on 18/04/2016.
+ * Created by Pieter on 18/04/2016.
  */
 public class DistPlSelector extends CandidateSelector {
     private final Node center;

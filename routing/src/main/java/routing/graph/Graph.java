@@ -8,14 +8,11 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 
 /**
- * Created by piete on 29/11/2015.
+ * Created by Pieter on 29/11/2015.
  */
 public class Graph {
+    private static final double epsilon = 0.00001;
     protected HashMap<Long, Node> nodes = new HashMap<Long, Node>();
-
-    public boolean hasNode(Long id) {
-        return nodes.containsKey(id);
-    }
 
     public Node addNode(long id, double lat, double lon) {
         Node out = nodes.get(id);
@@ -57,7 +54,7 @@ public class Graph {
         HashMap<Node, Double> forwardLens = new HashMap<>();
         Queue<NodeLen> q = new PriorityQueue<>((o1, o2) -> o1.l<o2.l? -1 : (o1.l>o2.l? 1 : 0));
         q.add(new NodeLen(start, 0));
-        while (curLen<len && !q.isEmpty()) {
+        while (curLen<=len+epsilon && !q.isEmpty()) {
             NodeLen curNl = q.poll();
             Node curNode = curNl.n;
             curLen = curNl.l;
@@ -65,7 +62,7 @@ public class Graph {
                 forwardLens.put(curNode, curLen);
                 for (Edge e: curNode.getOutEdges()) {
                     double eTourLen = curLen+e.getLength()+dc.getDistance(e.getStop(), start);
-                    if (!forwardLens.containsKey(e.getStop()) && eTourLen<len) {
+                    if (!forwardLens.containsKey(e.getStop()) && eTourLen<=len+epsilon) {
                         q.add(new NodeLen(e.getStop(), curLen+e.getLength()));
                     }
                 }
@@ -76,7 +73,7 @@ public class Graph {
         HashMap<Node, Double> backwardLens = new HashMap<>();
         q.clear();
         q.add(new NodeLen(start, 0));
-        while (curLen<len && !q.isEmpty()) {
+        while (curLen<=len+epsilon && !q.isEmpty()) {
             NodeLen curNl = q.poll();
             Node curNode = curNl.n;
             curLen = curNl.l;
@@ -84,7 +81,7 @@ public class Graph {
                 backwardLens.put(curNode, curLen);
                 for (Edge e: curNode.getInEdges()) {
                     double eTourLen = curLen+e.getLength()+dc.getDistance(start, e.getStart());
-                    if (!backwardLens.containsKey(e.getStart()) && eTourLen<len) {
+                    if (!backwardLens.containsKey(e.getStart()) && eTourLen<=len+epsilon) {
                         q.add(new NodeLen(e.getStart(), curLen+e.getLength()));
                     }
                 }
@@ -94,7 +91,7 @@ public class Graph {
         Graph out = new Graph();
         for (Map.Entry<Node, Double> nd: forwardLens.entrySet()) {
             Double backwardLen = backwardLens.get(nd.getKey());
-            if (backwardLen!=null && nd.getValue()+backwardLen<=len) {
+            if (backwardLen!=null && nd.getValue()+backwardLen<=len+epsilon) {
                 out.addNode(nd.getKey().clone());
             }
         }
@@ -115,7 +112,7 @@ public class Graph {
     private class NodeLen {
         private Node n;
         private double l;
-        public NodeLen(Node n, double l) {
+        private NodeLen(Node n, double l) {
             this.n = n;
             this.l = l;
         }

@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.Set;
 
 /**
- * Created by pieter on 6/06/2016.
+ * Created by Pieter on 6/06/2016.
  */
 public class Contract extends Command {
     private String in;

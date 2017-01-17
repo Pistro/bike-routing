@@ -34,6 +34,7 @@ public class FindLengthE extends Command {
     private long time;
     private String hyperIn;
     private int accuracy;
+    private boolean bi;
 
     public FindLengthE() {}
 
@@ -61,6 +62,7 @@ public class FindLengthE extends Command {
         s = ap.getDouble("s", DefaultParameters.STRICTNESS);
         lambda = ap.getDouble("lambda", DefaultParameters.LAMBDA);
         time = ap.getLong("time", -1);
+        bi = ap.getInt("bi", 0) != 0;
     }
 
     public void execute(Graph g) {
@@ -77,7 +79,6 @@ public class FindLengthE extends Command {
                 g2 = gr.getSpGraph();
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph Read! Reading time: " + (stop-start)/1000. + "s");
-                if (g2.getBi()) System.out.println("Warning: Exact routing on a bidirectional graph is slow!");
             } else {
                 System.out.println("Extracting subgraph...");
                 start = System.currentTimeMillis();
@@ -86,10 +87,11 @@ public class FindLengthE extends Command {
                 System.out.println("Extraction finished! Extraction time: " + (stop-start)/1000. + "s");
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                g2 = new SPGraph(g, reach, false, wb);
+                g2 = new SPGraph(g, reach, bi, wb);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }
+            if (g2.getBi()) System.out.println("Warning: Exact routing on a bidirectional graph is slow!");
             System.out.println("Starting routing (length: " + minLength/1000. + "-" + maxLength/1000. + "km)...");
             ExhaustiveRouteLengthFinder rlf = new ExhaustiveRouteLengthFinder(g.getNode(startId), wb, accuracy, lambda, s, minLength, maxLength, g2);
             rlf.maxSearchTimeMs = time;

@@ -35,6 +35,7 @@ public class FindLength extends Command {
     private String hyperIn;
     private double reach;
     private double beta;
+    private boolean bi;
 
     public FindLength() {}
 
@@ -62,6 +63,7 @@ public class FindLength extends Command {
         wb = new WeightBalancer(ap.getDouble("wFast", DefaultParameters.WFAST), ap.getDouble("wAttr", DefaultParameters.WATTR), ap.getDouble("wSafe", DefaultParameters.WSAFE));
         lambda = ap.getDouble("lambda", DefaultParameters.LAMBDA);
         strictness = ap.getDouble("strictness", DefaultParameters.STRICTNESS);
+        bi = ap.getInt("bi", 1) != 0;
     }
 
     public void execute(Graph g) {
@@ -86,7 +88,7 @@ public class FindLength extends Command {
                 System.out.println("Extraction finished! Extraction time: " + (stop-start)/1000. + "s");
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                g2 = new SPGraph(g, reach, true, wb);
+                g2 = new SPGraph(g, reach, bi, wb);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }

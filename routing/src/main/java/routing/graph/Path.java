@@ -18,6 +18,7 @@ import java.util.*;
  * @author Pieter
  */
 public class Path {
+    private static double epsilon = 0.00001;
     private Node start;
     private final LinkedList<Edge> edges;
     private final HashMap<String, Object> tags;
@@ -157,21 +158,19 @@ public class Path {
             Iterator<Edge> it2 = edges.iterator();
             while(it2.hasNext()) {
                 Edge compEdge = it2.next();
-                if (compEdge==curEdge) break;
                 compPos += compEdge.getLength()/2;
-                    double frac = Math.min(curPos-compPos, l-curPos+compPos);
-                    double dist2 = dc.getDistance2(curEdge, compEdge);
-                    double expectedDist = 2*frac*strictness/Math.PI;
-                    if (dist2<expectedDist*expectedDist) {
-                        double dist = dc.getDistance(curEdge, compEdge);
-                        interference += (expectedDist-dist)/expectedDist*curEdge.getLength()*compEdge.getLength();
-                    }
+                if (compPos+epsilon>=curPos) break;
+                double frac = Math.min(curPos-compPos, l-curPos+compPos);
+                double dist2 = dc.getDistance2(curEdge, compEdge);
+                double expectedDist = 2*frac*strictness/Math.PI;
+                if (dist2<expectedDist*expectedDist) {
+                    double dist = dc.getDistance(curEdge, compEdge);
+                    interference += (expectedDist-dist)/expectedDist*curEdge.getLength()*compEdge.getLength();
+                }
                 compPos += compEdge.getLength()/2;
             }
             curPos += curEdge.getLength()/2;
         }
-        double sqLen = 0;
-        for (Edge e: getEdges()) sqLen += e.getLength()*e.getLength();
         return 2*interference/(l*l);
     }
 }

@@ -6,8 +6,8 @@ package routing.graph;
 public class SimpleNode extends Node {
     private final double lat;
     private final double lon;
-    public SimpleNode() {
-        super();
+    public SimpleNode(Long id) {
+        super(id);
         lat = -1;
         lon = -1;
     }

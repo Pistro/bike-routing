@@ -43,6 +43,7 @@ public class FindLengthEBatch extends Command {
     private int nrThreads;
     private double reach;
     private int accuracy;
+    private boolean bi;
 
     // Batch nodes
     private HashMap<Node, HashMap<String, Object>> nodeInfo;
@@ -79,6 +80,7 @@ public class FindLengthEBatch extends Command {
         lambda = ap.getDouble("lambda", DefaultParameters.LAMBDA);
         time = ap.getLong("time", 60*60*1000);
         nrThreads = ap.getInt("threads", DefaultParameters.THREADS);
+        bi = ap.getInt("bi", 0) != 0;
     }
 
     public synchronized Node getNode() {
@@ -113,14 +115,14 @@ public class FindLengthEBatch extends Command {
                 hyper = gr.getSpGraph();
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph Read! Reading time: " + (stop-start)/1000. + "s");
-                if (hyper.getBi()==true) System.out.println("Warning: Exact routing on a bidirectional graph is slow!");
             } else {
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                hyper = new SPGraph(g, reach, false, wb);
+                hyper = new SPGraph(g, reach, bi, wb);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }
+            if (hyper.getBi()==true) System.out.println("Warning: Exact routing on a bidirectional graph is slow!");
             System.out.println("Starting routing (length: " + minLength/1000. + "-" + maxLength/1000. + "km)...");
             Thread[] threads = new Thread[nrThreads];
             for(int i = 0; i < nrThreads; i++) {

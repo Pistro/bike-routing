@@ -22,12 +22,8 @@ public abstract class CandidateSelector {
 
     public CandidateSelector() {}
 
-    public CandidateSelector(ArrayList<Candidate> candidates) {
-        initialize(candidates);
-    }
-
-    public void initialize(ArrayList<Candidate> candidates) {
-        this.candidates = candidates;
+    public void initialize(Collection<Candidate> candidates) {
+        this.candidates = new ArrayList<>(candidates);
         probabilities = new double[candidates.size()];
     }
 

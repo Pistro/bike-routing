@@ -4,6 +4,7 @@ import routing.algorithms.candidateselection.*;
 import routing.graph.*;
 import routing.graph.weights.PoisonedWeightGetter;
 import routing.graph.weights.WeightBalancer;
+import sun.awt.image.ImageWatched;
 
 import java.util.*;
 
@@ -59,7 +60,7 @@ public class RouteLengthFinder {
 
     public LinkedList<Path> findRoutes() {
         long go = System.nanoTime();
-        ArrayList<Candidate> cands = forwardSearch();
+        LinkedList<Candidate> cands = forwardSearch();
         long stop = System.nanoTime();
         forwardTime = (stop-go)/1000000;
         cs.initialize(cands);
@@ -67,6 +68,7 @@ public class RouteLengthFinder {
         //JsonWriter jw = new JsonWriter(jo);
         //jw.write("nodes.json");
         LinkedList<Candidate> candidates = cs.selectCandidates(nrAttempts);
+        //for (Candidate c: cands) if (((SPGraph.NodePair) c.node.getNode()).e.getId()==833188309L) candidates.add(c);
         LinkedList<Path> paths = new LinkedList<>();
         for (Candidate c: candidates) {
             Path forward = c.node.getPathFromRoot();
@@ -81,13 +83,11 @@ public class RouteLengthFinder {
         return paths;
     }
 
-    private ArrayList<Candidate> forwardSearch() {
+    private LinkedList<Candidate> forwardSearch() {
         DistanceCalculator dc = new DistanceCalculator(start);
         // Forward Dijkstra (based on weight) until all nodes with a tourlength possibly smaller than maxLength are added
         Tree t = new Tree();
-        HashSet<Node> candidateEnds = new HashSet<>();
         LinkedList<Candidate> candidates = new LinkedList<>();
-        HashSet<Candidate> extraCandidates = new HashSet<>();
         Queue<Candidate> q = new PriorityQueue<>((o1, o2) -> o1.weight<o2.weight? -1 : (o1.weight>o2.weight? 1 : 0));
         q.add(new Candidate(new Tree.TreeNode(t.getRoot(), start, null), 0, 0));
         HashSet<Node> added = new HashSet<>();
@@ -96,12 +96,9 @@ public class RouteLengthFinder {
             Node curN = cur.node.getNode();
             if (((SPGraph.NodePair) curN).e == start.e) ends.add(curN);
             if (added.add(curN)) {
+                boolean boundaryNode = false;
                 LinkedList<Edge> outEdges = nearbyNodes.get(curN);
                 if (outEdges==null) outEdges = curN.getOutEdges();
-                double minlenMinCurlen = minLength-cur.length;
-                if (minlenMinCurlen<0 || dc.getDistance2(curN, start)+epsilon>=minlenMinCurlen*minlenMinCurlen) {
-                    if (candidateEnds.add(((SPGraph.NodePair) curN).e) && outEdges.size()>1) candidates.add(cur);
-                }
                 for (Edge e: outEdges) {
                     Candidate cn = new Candidate(new Tree.TreeNode(cur.node, e.getStop(), e), cur.weight+wb.getWeight(e), cur.length + e.getLength());
                     LinkedList<Edge> cnOutEdges = nearbyNodes.get(cn.node.getNode());
@@ -118,16 +115,17 @@ public class RouteLengthFinder {
                         if (!e.getStop().hasReach() || e.getStop().getReach()+epsilon>=Math.min(cn.length, (minLength-tourL)/2)) {
                             if (tourL <= maxLength + epsilon) {
                                 q.add(cn);
-                            } else if (cur.length > 0) {
-                                extraCandidates.add(cur);
-                            }
+                            } else if (cur.length > 0) boundaryNode = true;
                         }
                     }
                 }
+                double minlenMinCurlen = minLength-cur.length;
+                if (boundaryNode || (minlenMinCurlen<0 || dc.getDistance2(curN, start)+epsilon>=minlenMinCurlen*minlenMinCurlen)) {
+                    if (outEdges.size()>1) candidates.add(cur);
+                }
             }
         }
-        for (Candidate c: extraCandidates) if (candidateEnds.add(((SPGraph.NodePair) c.node.getNode()).e)) candidates.add(c);
-        return new ArrayList<>(candidates);
+        return candidates;
     }
 
     private class PathInfo {

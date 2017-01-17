@@ -76,8 +76,8 @@ public class SPGraph extends Graph {
         @Override
         public int hashCode() {
             int hash = 1;
-            hash = hash * 17 + s.hashCode();
-            hash = hash * 31 + e.hashCode();
+            hash = hash * 17 + s.getId().hashCode();
+            hash = hash * 31 + e.getId().hashCode();
             return hash;
         }
         @Override
@@ -85,7 +85,7 @@ public class SPGraph extends Graph {
             if ( this == aThat ) return true;
             if ( !(aThat instanceof NodePair) ) return false;
             NodePair that = (NodePair)aThat;
-            return s == that.s && e == that.e;
+            return s.getId() == that.s.getId() && e.getId() == that.e.getId();
         }
         public NodePair clone() {
             return new NodePair(getId(), s, e);
@@ -174,7 +174,7 @@ public class SPGraph extends Graph {
                         }
                     }
                     if (matching_out != null) {
-                        Node n_new = hyperNodes.addNodePair(new SimpleNode(), curNp.e);
+                        Node n_new = hyperNodes.addNodePair(new SimpleNode((long) -e_in.getId()), curNp.e);
                         new SimpleEdge(e_in, e_in.getStart(), n_new);
                         for (Edge e_out : cur.getOutEdges()) {
                             if (e_out != matching_out) {
@@ -292,7 +292,9 @@ public class SPGraph extends Graph {
                 Collections.reverse(edgeList);
                 for (Edge e: edgeList) {
                     if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
-                        NodePair np = new NodePair(0, e.getStop(), lastNode);
+                        NodePair np;
+                        if (e.getStop()!=lastNode || !bi) np = new NodePair(0, e.getStop(), lastNode);
+                        else np = new NodePair(0, new SimpleNode((long) -e.getId()), lastNode);
                         createdNodes.add(np);
                         forwardLens.put(np, pLen);
                     }
@@ -398,15 +400,6 @@ public class SPGraph extends Graph {
                             successors = true;
                             addedStartPairs.remove(np1);
                             NodePair np0 = nps.addNodePair(start, lastEdge.getStart());
-                            if (!bi && np1.s == np1.e) {
-                                NodePair np1_new = nps.addNodePair(new SimpleNode(), lastNode);
-                                for (Edge e_out: np1.getOutEdges()) {
-                                    if (((NodePair)e_out.getStop()).e!=lastEdge.getStart()) {
-                                        new SimpleEdge(e_out, np1_new, e_out.getStop());
-                                    }
-                                }
-                                np1 = np1_new;
-                            }
                             boolean add = true;
                             for (Edge e0: np1.getInEdges()) {
                                 if (e0.getStart()==np0 && e0.getId()==e.getId()) add = false;
@@ -435,56 +428,6 @@ public class SPGraph extends Graph {
             }
         });
         if (!addedStartPairs.isEmpty()) throw new IllegalArgumentException("Not all startnodepairs were coupled to the graph!");
-        // Since some connections may have been broken due to bidirectionality constraints,
-        // the forward and backward distances have to be recalculated
-        // Forward Dijkstra
-        q.add(new NodePairLen(nps.getNodePair(start, start), 0));
-        forwardLens.clear();
-        curLen = -1;
-        while (curLen<=len+epsilon && !q.isEmpty()) {
-            NodePairLen curNl = q.poll();
-            NodePair curNode = curNl.n;
-            curLen = curNl.l;
-            if (!forwardLens.containsKey(curNode)) {
-                forwardLens.put(curNode, curLen);
-                for (Edge e: curNode.getOutEdges()) {
-                    double eTourLen = curLen+e.getLength() + dc.getDistance(e.getStop(), start);
-                    if (!forwardLens.containsKey(e.getStop()) && eTourLen<=len+epsilon) {
-                        q.add(new NodePairLen((NodePair) e.getStop(), curLen+e.getLength()));
-                    }
-                }
-            }
-        }
-        // Backward Dijkstra
-        backwardLens.clear();
-        q.clear();
-        for (Node n: out.getNodes().values()) {
-            NodePair np = (NodePair) n;
-            if (np.e == start) {
-                q.add(new NodePairLen(np, 0));
-            }
-        }
-        curLen = -1;
-        while (curLen<=len+epsilon && !q.isEmpty()) {
-            NodePairLen curNl = q.poll();
-            NodePair curNode = curNl.n;
-            curLen = curNl.l;
-            if (!backwardLens.containsKey(curNode)) {
-                backwardLens.put(curNode, curLen);
-                for (Edge e: curNode.getInEdges()) {
-                    double eTourLen = curLen + e.getLength() + dc.getDistance(start, e.getStart());
-                    if (!backwardLens.containsKey(e.getStart()) && eTourLen<=len+epsilon) {
-                        q.add(new NodePairLen((NodePair) e.getStart(), curLen+e.getLength()));
-                    }
-                }
-            }
-        }
-        // Decouple nodes that are out of reach
-        for (Node n: out.getNodes().values()) {
-            Double forwardLen = forwardLens.get(n);
-            Double backwardLen = backwardLens.get(n);
-            if (forwardLen==null || backwardLen==null || forwardLen+backwardLen>len+epsilon) n.decouple();
-        }
         /*HashSet<Integer> ids = new HashSet<>();
         for (Node n: out.getNodes().values()) for (Edge e: n.getOutEdges()) ids.add(e.id);
         JSONObject o = new JSONObject();
@@ -517,7 +460,9 @@ public class SPGraph extends Graph {
                     if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
                         NodePair np0 = hyperNodes.getNodePair(start, lastEdge.getStart());
                         if (np0==null) {
-                            NodePair np1 = hyperNodes.getNodePair(e.getStop(), lastEdge.getStop());
+                            NodePair np1;
+                            if (e.getStop()!=lastEdge.getStop() || !bi) np1 = hyperNodes.getNodePair(e.getStop(), lastEdge.getStop());
+                            else np1 = hyperNodes.getNodePair(new SimpleNode((long) -lastEdge.getId()), lastEdge.getStop());
                             np0 = nps.addNodePair(start, lastEdge.getStart());
                             LinkedList<Edge> np0Out = out.get(np0);
                             if (np0Out==null) {
@@ -564,13 +509,12 @@ public class SPGraph extends Graph {
     }
 
     private class NodePairSet {
-        private long idCnt = -1;
         private final HashMap<NodePair, NodePair> pairs = new HashMap<>();
 
         private NodePairSet() {}
 
         private NodePair addNodePair(Node s, Node e) {
-            NodePair last = new NodePair(idCnt--, s, e);
+            NodePair last = new NodePair(0, s, e);
             NodePair lastHyper = pairs.get(last);
             if (lastHyper==null) {
                 pairs.put(last, last);

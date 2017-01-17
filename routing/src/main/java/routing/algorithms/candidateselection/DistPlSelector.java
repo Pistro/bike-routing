@@ -7,6 +7,7 @@ import routing.graph.Node;
 import routing.graph.SPGraph;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -23,7 +24,7 @@ public class DistPlSelector extends CandidateSelector {
         this.center = center;
     }
 
-    public void initialize(ArrayList<Candidate> candidates) {
+    public void initialize(Collection<Candidate> candidates) {
         super.initialize(candidates);
         // All distances are zero
         distances = new double[candidates.size()];

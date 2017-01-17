@@ -14,6 +14,7 @@ import java.util.*;
  * Created by Pieter Stroobant in September 2016.
  */
 public class ExhaustiveRouteLengthFinder {
+    private static double epsilon = 0.00001;
     // Algorithmic parameters
     // ----------------------
     // Startnode (in the hypergraph)
@@ -232,7 +233,7 @@ public class ExhaustiveRouteLengthFinder {
                     }
                     double minRetLength = returnLengths[nodeToIdx.get(ePath.getEnd())];
 
-                    if (eLength + minRetLength < maxLength) {
+                    if (eLength + minRetLength <= maxLength + epsilon) {
                         NodeLen nl = new NodeLen(ePath.getEnd(), eLength);
                         HashSet<ApproximatePath> ar = scenarios.computeIfAbsent(nl, k -> new HashSet<>());
                         ePath = mergePath(ePath, ar);

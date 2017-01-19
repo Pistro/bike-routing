@@ -65,7 +65,7 @@ public class XMLGraphReader extends DefaultHandler {
                 keep = false;
                 int id = Integer.parseInt(curAttrs.get("id"));
                 double length = Double.parseDouble(curTags.get("length"));
-                if (accuracy>0) length = Math.max(1, Math.round(length/accuracy))*accuracy;
+                if (accuracy>0) length = Math.max(1, Math.ceil(length/accuracy))*accuracy;
                 double score_safe_lin = Double.parseDouble(curTags.get("score_safe_lin"));
                 double score_safe_const = Double.parseDouble(curTags.get("score_safe_const"));
                 double score_safe = score_safe_lin*length+score_safe_const;

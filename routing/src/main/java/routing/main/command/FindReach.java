@@ -30,6 +30,7 @@ public class FindReach extends Command {
     private String hyperIn;
     private double reach;
     private int nrThreads;
+    private boolean bi;
 
     public FindReach() {}
 
@@ -53,6 +54,7 @@ public class FindReach extends Command {
         // Optional
         wb = new WeightBalancer(ap.getDouble("wFast", DefaultParameters.WFAST), ap.getDouble("wAttr", DefaultParameters.WATTR), ap.getDouble("wSafe", DefaultParameters.WSAFE));
         nrThreads = ap.getInt("threads", DefaultParameters.THREADS);
+        bi = ap.getInt("bi", 1) != 0;
     }
 
     public void execute(Graph g) {
@@ -72,7 +74,7 @@ public class FindReach extends Command {
             } else {
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                g2 = new SPGraph(g, reach, true, wb);
+                g2 = new SPGraph(g, reach, bi, wb);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }

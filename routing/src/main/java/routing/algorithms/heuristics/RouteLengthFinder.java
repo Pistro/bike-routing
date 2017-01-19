@@ -103,12 +103,17 @@ public class RouteLengthFinder {
                     Candidate cn = new Candidate(new Tree.TreeNode(cur.node, e.getStop(), e), cur.weight+wb.getWeight(e), cur.length + e.getLength());
                     LinkedList<Edge> cnOutEdges = nearbyNodes.get(cn.node.getNode());
                     if (cnOutEdges == null) cnOutEdges = cn.node.getNode().getOutEdges();
-                    while (cnOutEdges.size()==1 && cn.length<=maxLength+epsilon) {
+                    HashSet<Node> encountered = new HashSet<>(); // Cycle detection
+                    while (cnOutEdges.size() == 1 && cn.length <= maxLength + epsilon) {
                         if (((SPGraph.NodePair) e.getStop()).e == start.e) ends.add(e.getStop());
                         e = cnOutEdges.getFirst();
-                        cn = new Candidate(new Tree.TreeNode(cn.node, e.getStop(), e), cn.weight+wb.getWeight(e), cn.length + e.getLength());
+                        cn = new Candidate(new Tree.TreeNode(cn.node, e.getStop(), e), cn.weight + wb.getWeight(e), cn.length + e.getLength());
                         cnOutEdges = nearbyNodes.get(cn.node.getNode());
                         if (cnOutEdges == null) cnOutEdges = cn.node.getNode().getOutEdges();
+                        if (!encountered.add(cn.node.getNode())) {
+                            cn.length = Double.MAX_VALUE;
+                            break;
+                        }
                     }
                     if (!added.contains(e.getStop())) {
                         double tourL = cn.length + dc.getDistance(e.getStop(), start);
@@ -202,9 +207,14 @@ public class RouteLengthFinder {
                 // Add all the neighbours of current to toAdd and their id's to considered id's
                 for (Edge e : curNode.getInEdges()) {
                     Candidate tn = new Candidate(new Tree.TreeNode(curCan.node, e.getStart(), e), curCan.weight + wg.getWeight(e, curCan.length), curCan.length + e.getLength());
+                    HashSet<Node> encountered = new HashSet<>(); // Cycle detection
                     while (tn.node.getNode().getInEdges().size()==1 && tn.length<=maxLength+epsilon) {
                         e = tn.node.getNode().getInEdges().getFirst();
                         tn = new Candidate(new Tree.TreeNode(tn.node, e.getStart(), e), tn.weight+wg.getWeight(e, tn.length), tn.length + e.getLength());
+                        if (!encountered.add(e.getStart())) {
+                            tn.length = Double.MAX_VALUE;
+                            break;
+                        }
                     }
                     if (!addedNodes.contains(e.getStart())) {
                         double tourL = tn.length + forwardLength + dc.getDistance(e.getStart(), forwardStop);

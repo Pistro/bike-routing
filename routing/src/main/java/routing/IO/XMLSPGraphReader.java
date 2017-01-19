@@ -55,10 +55,8 @@ public class XMLSPGraphReader extends DefaultHandler {
         if (keep) {
             if (qName.equals("node")) {
                 keep = false;
-                long startId = Long.parseLong(curAttrs.get("start_id"));
-                long endId = Long.parseLong(curAttrs.get("stop_id"));
-                Node startNode = startId>=0? graph.getNode(startId) : new SimpleNode(startId);
-                Node endNode = endId>=0? graph.getNode(endId) : new SimpleNode(endId);
+                Node startNode = graph.getNode(Long.parseLong(curAttrs.get("start_id")));
+                Node endNode = graph.getNode(Long.parseLong(curAttrs.get("stop_id")));
                 Node n = spGraph.addNodePair(Long.parseLong(curAttrs.get("id")), startNode, endNode);
                 if (curTags.containsKey("reach")) n.setReach(Double.parseDouble(curTags.get("reach")));
             } else if (qName.equals("way")) {

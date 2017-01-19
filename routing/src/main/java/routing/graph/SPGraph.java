@@ -2,9 +2,11 @@ package routing.graph;
 
 import org.json.simple.JSONObject;
 import routing.IO.JsonWriter;
+import routing.algorithms.exact.Dijkstra;
 import routing.algorithms.heuristics.DistanceCalculator;
 import routing.graph.weights.WeightBalancer;
 import routing.graph.weights.WeightGetter;
+import routing.graph.weights.WeightLength;
 
 import java.util.*;
 
@@ -75,17 +77,17 @@ public class SPGraph extends Graph {
         public double getLon() { return e.getLon(); }
         @Override
         public int hashCode() {
-            int hash = 1;
-            hash = hash * 17 + s.getId().hashCode();
-            hash = hash * 31 + e.getId().hashCode();
-            return hash;
+            long hash = 1;
+            hash = hash * 17 + s.getId();
+            hash = hash * 31 + e.getId();
+            return (int) hash;
         }
         @Override
         public boolean equals(Object aThat) {
             if ( this == aThat ) return true;
             if ( !(aThat instanceof NodePair) ) return false;
             NodePair that = (NodePair)aThat;
-            return s.getId() == that.s.getId() && e.getId() == that.e.getId();
+            return s.getId().equals(that.s.getId()) && e.getId().equals(that.e.getId());
         }
         public NodePair clone() {
             return new NodePair(getId(), s, e);
@@ -102,7 +104,6 @@ public class SPGraph extends Graph {
         this.reach = reach;
         this.wg = wb;
         this.bi = bidirectional;
-
         // Construct hypergraph using every possible starting node
         hyperNodes = new GraphNodePairSet(this);
         int i = 0;
@@ -163,25 +164,37 @@ public class SPGraph extends Graph {
             for (Node cur : new LinkedList<>(getNodes().values())) {
                 NodePair curNp = (NodePair) cur;
                 for (Edge e : new LinkedList<>(cur.getOutEdges())) if (e.getStop() == cur) e.decouple();
+                HashSet<Node> processedNbs = new HashSet<>();
                 for (Edge e_in : new LinkedList<>(cur.getInEdges())) {
-                    NodePair n_in = (NodePair) e_in.getStart();
-                    Edge matching_out = null;
-                    for (Edge e_out : cur.getOutEdges()) {
-                        NodePair n_out = (NodePair) e_out.getStop();
-                        if (n_in.e == n_out.e) {
-                            matching_out = e_out;
-                            break;
-                        }
-                    }
-                    if (matching_out != null) {
-                        Node n_new = hyperNodes.addNodePair(new SimpleNode((long) -e_in.getId()), curNp.e);
-                        new SimpleEdge(e_in, e_in.getStart(), n_new);
+                    NodePair np_in = ((NodePair) e_in.getStart());
+                    if (np_in!=null && processedNbs.add(np_in.e)) {
+                        Node nb_in = np_in.e;
+                        boolean split = false;
                         for (Edge e_out : cur.getOutEdges()) {
-                            if (e_out != matching_out) {
-                                new SimpleEdge(e_out, n_new, e_out.getStop());
+                            Node nb_out = ((NodePair) e_out.getStop()).e;
+                            if (nb_in == nb_out) {
+                                split = true;
+                                break;
                             }
                         }
-                        e_in.decouple();
+                        if (split) {
+                            Node n_new = hyperNodes.addNodePair(nb_in, curNp.e);
+                            if (n_new.getInEdges().size()==0) { // <-- Redundant check?
+                                LinkedList<Edge> toDecouple = new LinkedList<>();
+                                for (Edge e_in_alt : cur.getInEdges()) {
+                                    if (((NodePair) e_in_alt.getStart()).e == nb_in) {
+                                        new SimpleEdge(e_in_alt, e_in_alt.getStart(), n_new);
+                                        toDecouple.add(e_in_alt);
+                                    }
+                                }
+                                for (Edge e: toDecouple) e.decouple();
+                                for (Edge e_out : cur.getOutEdges()) {
+                                    if (((NodePair) e_out.getStop()).e != nb_in) {
+                                        new SimpleEdge(e_out, n_new, e_out.getStop());
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -276,8 +289,8 @@ public class SPGraph extends Graph {
     public Graph getSubgraph(Node start, double len) {
         DistanceCalculator dc = new DistanceCalculator(start);
         // Find starting nodes
-        HashMap<NodePair, Double> forwardLens = new HashMap<>();
-        HashSet<NodePair> createdNodes = new HashSet<>();
+        HashSet<NodePair> startPairs = new HashSet<>();
+        Queue<NodePairLen> q = new PriorityQueue<>((o1, o2) -> o1.l<o2.l? -1 : (o1.l>o2.l? 1 : 0));
         contract(start, (added, lastNode, lastEdge, pLen) -> {
             if (pLen>reach+epsilon && pLen-lastEdge.getLength()<=reach+epsilon) {
                 Set<Edge> edgeSet = new HashSet<>();
@@ -292,27 +305,18 @@ public class SPGraph extends Graph {
                 Collections.reverse(edgeList);
                 for (Edge e: edgeList) {
                     if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
-                        NodePair np;
-                        if (e.getStop()!=lastNode || !bi) np = new NodePair(0, e.getStop(), lastNode);
-                        else np = new NodePair(0, new SimpleNode((long) -e.getId()), lastNode);
-                        createdNodes.add(np);
-                        forwardLens.put(np, pLen);
+                        NodePair np = null;
+                        if (e.getStop()==lastNode && !bi) np = hyperNodes.getNodePair(e.getStart(), lastNode);
+                        if (np==null) np = hyperNodes.getNodePair(e.getStop(), lastNode);
+                        if (np==null) throw new IllegalArgumentException("Expected nodepairs are missing!");
+                        startPairs.add(np);
+                        q.add(new NodePairLen(np, pLen));
                     }
                 }
             }
         });
-        // Match those staring nodes to nodes from the actual graph
-        HashSet<NodePair> startPairs = new HashSet<>();
-        Queue<NodePairLen> q = new PriorityQueue<>((o1, o2) -> o1.l<o2.l? -1 : (o1.l>o2.l? 1 : 0));
-        for (Node n: getNodes().values()) {
-            NodePair np = (NodePair) n;
-            if (createdNodes.remove(np)) {
-                startPairs.add(np);
-                q.add(new NodePairLen(np, forwardLens.get(np)));
-            }
-        }
-        if (!createdNodes.isEmpty()) throw new IllegalArgumentException("Expected nodepairs are missing!");
-        forwardLens.clear();
+        // Match those starting nodes to nodes from the actual graph
+        HashMap<NodePair, Double> forwardLens = new HashMap<>();
         // Forward Dijkstra
         double curLen = -1;
         while (curLen<=len+epsilon && !q.isEmpty()) {
@@ -395,7 +399,9 @@ public class SPGraph extends Graph {
                 boolean successors = false;
                 for (Edge e: edgeList) {
                     if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
-                        NodePair np1 = nps.getNodePair(e.getStop(), lastNode);
+                        NodePair np1 = null;
+                        if (e.getStop()==lastNode && !bi) np1 = nps.getNodePair(e.getStart(), lastNode);
+                        if (np1==null) np1 = nps.getNodePair(e.getStop(), lastNode);
                         if (np1!=null) {
                             successors = true;
                             addedStartPairs.remove(np1);
@@ -460,9 +466,9 @@ public class SPGraph extends Graph {
                     if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
                         NodePair np0 = hyperNodes.getNodePair(start, lastEdge.getStart());
                         if (np0==null) {
-                            NodePair np1;
-                            if (e.getStop()!=lastEdge.getStop() || !bi) np1 = hyperNodes.getNodePair(e.getStop(), lastEdge.getStop());
-                            else np1 = hyperNodes.getNodePair(new SimpleNode((long) -lastEdge.getId()), lastEdge.getStop());
+                            NodePair np1 = null;
+                            if (e.getStop()==lastNode && !bi) np1 = hyperNodes.getNodePair(e.getStart(), lastNode);
+                            if (np1==null) np1 = hyperNodes.getNodePair(e.getStop(), lastNode);
                             np0 = nps.addNodePair(start, lastEdge.getStart());
                             LinkedList<Edge> np0Out = out.get(np0);
                             if (np0Out==null) {

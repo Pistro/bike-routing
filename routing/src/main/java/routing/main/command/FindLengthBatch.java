@@ -100,7 +100,7 @@ public class FindLengthBatch extends Command {
             int nr = 0;
             for (Map.Entry<Node, HashMap<String, Object>> en: nodeInfo.entrySet()) {
                 nr++;
-                System.out.println("Starting routing " + nr + "/" + nodeInfo.size() + " (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)...");
+                System.out.println("Starting routing " + nr + "/" + nodeInfo.size() + " (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)... " + en.getKey().getId());
                 CandidateSelector cs = new DistPlSelector(en.getKey());
                 start = System.currentTimeMillis();
                 RouteLengthFinder rlf = new RouteLengthFinder(wb, en.getKey(), cs, minLength, maxLength, lambda, strictness, beta, alternatives, g2);

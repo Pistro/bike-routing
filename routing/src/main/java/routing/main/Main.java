@@ -26,7 +26,7 @@ public class Main {
             throw new IllegalArgumentException("An input file is required. Pass an input file by specifying the '-in' option");
         }
         double accuracy = a.getDouble("accuracy", -1);
-        Command [] commands = {new FindLength(), new FindLengthBatch(), new CollectInfo(),
+        Command [] commands = {new FindLength(), new FindLengthBatch(), new CollectInfo(), new CorrectLength(),
                                 new FindLCC(), new Contract(), new FindReach(), new FindReachFloyd(),
                                 new FindLengthE(), new SelectNodes(), new FindLengthEBatch(), new FindSPGraph() };
         Command c = null;

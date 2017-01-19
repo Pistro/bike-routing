@@ -38,7 +38,7 @@ public abstract class Node {
     public double getReach() { return reach; }
     public void clearReach() { reach = -1; }
 
-    public Node(Long id) { this.id = id; idCnt = Math.max(idCnt, id+1); }
+    public Node(long id) { this.id = id; idCnt = Math.max(idCnt, id+1); }
     public Node() { this.id = idCnt++; }
 
     public void decouple() {

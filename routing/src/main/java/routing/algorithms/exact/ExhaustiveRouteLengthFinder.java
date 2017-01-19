@@ -226,14 +226,14 @@ public class ExhaustiveRouteLengthFinder {
                     ApproximatePath ePath = new ApproximatePath(curPath);
                     double eLength = curLength + ed.getLength();
                     ePath.getEdges().add(ed);
-                    while (ePath.getEnd().getOutEdges().size()==1 && !(((SPGraph.NodePair) ePath.getEnd()).e==start.e && eLength>minLength)) {
+                    while (ePath.getEnd().getOutEdges().size()==1 && !(((SPGraph.NodePair) ePath.getEnd()).e==start.e && eLength>=minLength-epsilon)) {
                         Edge extra = ePath.getEnd().getOutEdges().getFirst();
                         ePath.getEdges().add(extra);
                         eLength += extra.getLength();
                     }
                     double minRetLength = returnLengths[nodeToIdx.get(ePath.getEnd())];
 
-                    if (eLength + minRetLength <= maxLength + epsilon) {
+                    if (eLength + minRetLength <= maxLength+epsilon) {
                         NodeLen nl = new NodeLen(ePath.getEnd(), eLength);
                         HashSet<ApproximatePath> ar = scenarios.computeIfAbsent(nl, k -> new HashSet<>());
                         ePath = mergePath(ePath, ar);
@@ -241,7 +241,7 @@ public class ExhaustiveRouteLengthFinder {
 
                         // Calculate the forward cost
                         double eScore = ePath.getWeight(wg)/eLength + lambda*ePath.getUnscaledInterference()/(eLength*eLength);
-                        if (((SPGraph.NodePair)ePath.getEnd()).e == start.e && minLength < eLength && eScore < bestScore && eLength!=0) {
+                        if (((SPGraph.NodePair)ePath.getEnd()).e == start.e && minLength-epsilon <= eLength && eScore < bestScore && eLength!=0) {
                             best = ePath;
                             bestScore = eScore;
                         }
@@ -352,7 +352,7 @@ public class ExhaustiveRouteLengthFinder {
                 WgtLen forward = en.getValue();
                 WgtLen backward = returnWeights.get(en.getKey());
                 double tourL = pLength + forward.l + backward.l, tourW = pWeight + forward.w + backward.w;
-                if (minLength <= tourL && tourL <= maxLength && tourL != 0) {
+                if (minLength-epsilon <= tourL && tourL <= maxLength+epsilon && tourL != 0) {
                     bound2 = Math.min(bound2, tourW/tourL+lambda*(pUnscaledInterf/tourL)/tourL);
                 }
             }
@@ -367,18 +367,18 @@ public class ExhaustiveRouteLengthFinder {
                 for (Map.Entry<Node, Double> en: ntec.nodeToCost.entrySet()) {
                     double c = en.getValue();
                     SPGraph.NodePair np = (SPGraph.NodePair) en.getKey();
-                    if (np.e==start.e && minLength<=nse.len && nse.len!=0) {
+                    if (np.e==start.e && minLength-epsilon<=nse.len && nse.len!=0) {
                         bound2 = Math.min(bound2, c/nse.len+lambda*(pUnscaledInterf/nse.len)/nse.len);
                     }
                     for (Edge e: en.getKey().getOutEdges()) {
                         int len = nse.len + (int) e.getLength();
                         double cost = c + wc.getWeight(e);
-                        while (e.getStop().getOutEdges().size()==1 && !(((SPGraph.NodePair) e.getStop()).e==start.e && len>=minLength) && len<=maxLength) {
+                        while (e.getStop().getOutEdges().size()==1 && !(((SPGraph.NodePair) e.getStop()).e==start.e && len>=minLength-epsilon) && len<=maxLength+epsilon) {
                             e = e.getStop().getOutEdges().getFirst();
                             len += (int) e.getLength();
                             cost += wc.getWeight(e);
                         }
-                        if (len+returnLengths[nodeToIdx.get(e.getStop())]<=maxLength) {
+                        if (len+returnLengths[nodeToIdx.get(e.getStop())]<=maxLength+epsilon) {
                             if ((cost + returnWeights.get(e.getStop()).w)/maxLength+pMinInterfScaled<bound2 && inventory.addWalk(e.getStop(), len, cost)) {
                                 schedule.add(e.getStop(), len);
                             }

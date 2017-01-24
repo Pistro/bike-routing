@@ -20,9 +20,8 @@ python3 osm2graph \
 	--cross endings remap=highway.primary.highway_primary,highway.secondary.highway_secondary,highway.tertiary.highway_tertiary \
 	--step \
 	--edge-info \
-	--height in=../source/$1.tif \
 	--xml out=../source/$1_inter.osm \
-	--filter rules=+*,-osm.bounds,-osm.node.attr.version,-osm.node.attr.timestamp,-osm.way.attr.version,-osm.way.attr.timestamp,-osm.way.tag:k~length,-osm.way.tag:k~height_dif,-osm.way.tag:k~start_node,-osm.way.tag:k~end_node \
+	--filter rules=+*,-osm.bounds,-osm.node.attr.version,-osm.node.attr.timestamp,-osm.way.attr.version,-osm.way.attr.timestamp,-osm.way.tag:k~length,-osm.way.tag:k~start_node,-osm.way.tag:k~end_node \
 	--fix out=../source/$1_fixture.xml ../source/$1_edge.osm
 }
 

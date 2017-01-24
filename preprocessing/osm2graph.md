@@ -16,13 +16,10 @@ Some of the processors adapt the stream from their first read on. These processo
 ## Dependencies
  - Python 3, including pip. If you are a Windows user, do not forget to add both the python installation dir and the 'Scripts' subdir to your path
 
- - Following pip packages are always required:
+ - Also, following pip packages are required:
      - haversine
      - shapely ([Windows](http://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely), [Linux](https://pypi.python.org/pypi/Shapely))
      - rtree ([Windows](RtreeWindows.md), [Linux](http://toblerity.org/rtree/install.html#nix))
-
- - If you are not interested to calculate height differences you should remove `height.py` from the 'extra' subfolder. If you are interested, following pip packages are required:
-     - GDAL ([Windows](http://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal), [Linux](http://www.sarasafavi.com/installing-gdalogr-on-ubuntu.html))
 	 
 ## Options
 Options can be passed through their short form (only a '-', followed by the short name) or by their long form (a '--', followed by the long name). Some of the options require extra arguments, a suboption name and value are separated by an '=' sign. E.g.: 

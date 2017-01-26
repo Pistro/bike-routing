@@ -83,9 +83,6 @@ class FixtureWriter(OsmWriter):
 			self.xmlWriter.startElement('field', {'type': 'FloatField', 'name': 'lon'})
 			self.xmlWriter.outFile.write(str(self.attrs['lon']))
 			self.xmlWriter.endElement('field')
-			self.xmlWriter.startElement('field', {'type': 'DecimalField', 'name': 'height'})
-			self.xmlWriter.outFile.write(str(self.tags['height']))
-			self.xmlWriter.endElement('field')
 			self.xmlWriter.endElement('object')
 			self.tags = None
 		self.writer.endElement(name)
@@ -116,4 +113,4 @@ class WriteFixture(ComboOsmProcessor):
 		
 	@classmethod
 	def getInfo(cls):
-		return ("[Writer] Write the output to a Django fixture xml-file.", [("out","The file to which the output is writen."), ("height", "A Geo-TIFF file containing the heights for each node of the stream.")])
+		return ("[Writer] Write the output to a Django fixture xml-file.", [("out","The file to which the output is writen.")])

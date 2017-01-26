@@ -1,5 +1,6 @@
 var map;
-var selectedRoute;
+var colors = ['red', 'green', 'yellow', 'blue', 'black'];
+var dashes = ['', '12,12', '6,6', '9,3', '3,9'];
 function processRoute(route, index) {
 	// Start by processing the nodes
 	route.nodes = [];
@@ -44,13 +45,8 @@ function processRoute(route, index) {
 	// Finally, process the route
 	if (route.tags === undefined) route.tags = {};
 	route.tags.length = route.nodes[route.nodes.length-1].dist;
-	if (index === 0) route.tags.color = 'red';
-	else if (index === 1) route.tags.color = 'green';
-	else if (index === 2) route.tags.color = 'blue';
-	else if (index === 3) route.tags.color = 'yellow';
-	else if (index === 4) route.tags.color = 'black';
+	route.tags.color = colors[index%colors.length];
 }
-var dashes = ['', '12,12', '6,6', '9,3', '3,9']
 function processFile() {
 	console.log('Processing file...')
 	for (var i = 0; i<file.routes.length; i++) {
@@ -60,7 +56,6 @@ function processFile() {
 }
 processFile();
 function map_init_basic (mp, options) {
-	console.log(file)
 	initBounds(mp);
 	map = mp;
 	for (var i = 0; i<file.routes.length; i++) {
@@ -91,21 +86,15 @@ function map_init_route(map, routeIndex) {
 		weight: 5,
 		opacity: 1,
 		smoothFactor: 1,
-		dashArray: dashes[routeIndex]
+		dashArray: dashes[routeIndex%dashes.length]
 	});
-	polyline.routeIndex = routeIndex;
-	polyline.on('mouseover', function (e) {
-		clearMarkers();
-	});
-	polyline.on('mousemove', function (e) {
-		selectedRoute = file.routes[this.routeIndex];
-		var nodes = selectedRoute.nodes;
+	polyline.on('click', function (e) {
 		var minDist = Infinity;
 		var minPoint = null;
 		var minJ = null;
-		for (var j = 0; j<nodes.length-1; j++) {
-			var curr =  nodes[j];
-			var next = nodes[j+1];
+		for (var j = 0; j<routeNodes.length-1; j++) {
+			var curr =  routeNodes[j];
+			var next = routeNodes[j+1];
 			var d = distFromSegment(e.latlng, curr, next);
 			if (d[0]<minDist) {
 				minDist = d[0];
@@ -113,9 +102,9 @@ function map_init_route(map, routeIndex) {
 				minJ = j;
 			}
 		}
-		var curr = nodes[minJ];
+		var curr = routeNodes[minJ];
 		var dBefore = curr.distanceTo(minPoint);
-		addMarkers(nodes[minJ].dist+dBefore);
+		addMarker(route, routeNodes[minJ].dist+dBefore);
 	});
 	polyline.addTo(map);
 	if (route.hasOwnProperty("markpoints")) {
@@ -123,18 +112,6 @@ function map_init_route(map, routeIndex) {
 		for (var i = 0; i<markpoints.length; i++) {
 			var markpoint = markpoints[i];
 			L.marker([markpoint.lat, markpoint.lon]).addTo(map);
-		}
-	}
-}
-function clearMarkers() {
-	for (var i = 0; i<file.routes.length; i++) {
-		var route = file.routes;
-		if (route.pMap!==undefined) {
-			route.pMap.closePopup();
-			map.removeLayer(route.pMap);
-			route.pMap = undefined;
-			route.pGraph.remove();
-			route.pGraph = undefined;
 		}
 	}
 }
@@ -155,42 +132,29 @@ function tagsToString(tags, exceptions) {
 	}
 	return s;
 }
-function addMarkers(position) {
+var marker;
+function addMarker(route, position) {
 	var nodeIndex = 0;
 	var dist = 0;
-	var interNodeDist = selectedRoute.nodes[0].distanceTo(selectedRoute.nodes[1%selectedRoute.nodes.length]);
+	var interNodeDist = route.nodes[0].distanceTo(route.nodes[1%route.nodes.length]);
 	while (dist+interNodeDist<position) {
 		dist += interNodeDist;
 		nodeIndex++;
-		interNodeDist = selectedRoute.nodes[nodeIndex%selectedRoute.nodes.length].distanceTo(selectedRoute.nodes[(nodeIndex+1)%selectedRoute.nodes.length]);
+		interNodeDist = route.nodes[nodeIndex%route.nodes.length].distanceTo(route.nodes[(nodeIndex+1)%route.nodes.length]);
 	}
-	var currentNode = selectedRoute.nodes[nodeIndex%selectedRoute.nodes.length];
-	var nextNode = selectedRoute.nodes[(nodeIndex+1)%selectedRoute.nodes.length];
-	var height = currentNode.height + (nextNode.height-currentNode.height)/interNodeDist*(position-dist);
+	var currentNode = route.nodes[nodeIndex%route.nodes.length];
+	var nextNode = route.nodes[(nodeIndex+1)%route.nodes.length];
 	var lat = currentNode.lat + (nextNode.lat-currentNode.lat)/interNodeDist*(position-dist);
 	var lng = currentNode.lng + (nextNode.lng-currentNode.lng)/interNodeDist*(position-dist);
 	var latlng = new L.LatLng(lat, lng);
 	var way = file.ways[currentNode.way];
-	var route = selectedRoute;
 	
 	var s = tagsToString(way.tags, []);
 	s += tagsToString(way, ['nodes', 'tags']);
 	s += "<strong> Position: </strong> " + Math.round(position*100)/100 + "<br>";
-	s += "<strong> Height: </strong> " + Math.round(height*100)/100 + "<br>";
-	if (route.pMap === undefined) route.pMap = L.circleMarker(latlng);
-	else route.pMap.setLatLng(latlng);
-	route.pMap.bindPopup(s).addTo(map).openPopup();
-	var vis = d3.select("#linegraph");
-	if (route.pGraph !== undefined) route.pGraph.remove();
-	var color = route.tags.color;
-	route.pGraph = vis
-		.append("svg:circle")
-		.attr("stroke", "blue")
-		.attr("fill", "blue")
-		.attr('fill-opacity', 0.2)
-		.attr("cx", xScale(position))
-		.attr("cy", yScale(height))
-		.attr("r", 10);
+	if (marker === undefined) marker = L.circleMarker(latlng);
+	else marker.setLatLng(latlng);
+	marker.bindPopup(s).addTo(map).openPopup();
 }
 function distFromSegment(betweenNode, startNode, stopNode) {
 	if (startNode.distanceTo(stopNode)<0.2) {

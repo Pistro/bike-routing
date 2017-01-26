@@ -20,13 +20,13 @@ html, body {
 #panel1{
     position: absolute;
     height: 100%;
-    width: 50%;
+    width: 70%;
 }
 #panel2 {
     position: absolute;
-    left: 50%;
+    left: 70%;
     height: 100%;
-    width: 50%;
+    width: 30%;
 }
 #leftPanel {
     position: absolute;
@@ -38,13 +38,6 @@ html, body {
     left: 70%;
     height: 100%;
     width: 30%;
-}
-#panel2top {
-    height: 50%;
-}
-#panel2bottom {
-	padding: 10px;
-    height: 50%;
 }
 #panel2first {
     height: 30%;

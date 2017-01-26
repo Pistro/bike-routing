@@ -2,26 +2,27 @@ package routing.algorithms.candidateselection;
 
 import datastructure.IntPair;
 import javafx.util.Pair;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import routing.algorithms.heuristics.DistanceCalculator;
 import routing.graph.Node;
 import routing.graph.SPGraph;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * Created by Pieter on 18/04/2016.
  */
 public class DistPlSelector extends CandidateSelector {
+    private double minLength;
     private final Node center;
 
     private double [] distances;
-    private double [] unpleasantnesses;
+    double [] unpleasantnesses;
 
-    public DistPlSelector(Node center) {
+    public DistPlSelector(Node center, double minLength) {
         this.center = center;
+        this.minLength = minLength;
     }
 
     public void initialize(Collection<Candidate> candidates) {
@@ -99,19 +100,23 @@ public class DistPlSelector extends CandidateSelector {
                 probabilities[i] = 0;
             }
         } else {
-            double a = -1 / 0.5 * Math.log(1 - 0.75);
+            double x = 0.2;
+            double y = 0.5;
+            double a = Math.log(0.01/y)/(0.1-x);
+            double b = Math.log((1-0.95)/(1-y))/(x-0.3);
             for (int i = 0; i < probabilities.length; i++) {
-                probabilities[i] = (1 - Math.exp(-a * distances[i] / maxDistance)) * unpleasantnesses[i];
+                if (distances[i]<x*maxDistance) probabilities[i] *= y*Math.exp(a*(distances[i]/maxDistance-x));
+                else probabilities[i] *= 1-(1-y)*Math.exp(b*(x-distances[i]/maxDistance));
             }
         }
         // Density
         DistanceCalculator dc = new DistanceCalculator(center);
-        double lat200m = 500/dc.getLatScale(), lon200m = 500/dc.getLonScale();
+        double latTile = 0.05*minLength/dc.getLatScale(), lonTile = 0.05*minLength/dc.getLonScale();
         HashMap<IntPair, MaxSum> tileMaxSum = new HashMap<>();
         int pos = 0;
         for (Candidate c: candidates) {
             Node cNode = c.node.getNode();
-            IntPair cPair = new IntPair((int) (cNode.getLat()/lat200m), (int) (cNode.getLon()/lon200m));
+            IntPair cPair = new IntPair((int) (cNode.getLat()/latTile), (int) (cNode.getLon()/lonTile));
             MaxSum cMaxSum = tileMaxSum.computeIfAbsent(cPair, k -> new MaxSum(0., 0.));
             cMaxSum.max = Math.max(cMaxSum.max, probabilities[pos]);
             cMaxSum.sum += probabilities[pos];
@@ -120,7 +125,7 @@ public class DistPlSelector extends CandidateSelector {
         pos = 0;
         for (Candidate c: candidates) {
             Node cNode = c.node.getNode();
-            MaxSum cMaxSum = tileMaxSum.get(new IntPair((int) (cNode.getLat()/lat200m), (int) (cNode.getLon()/lon200m)));
+            MaxSum cMaxSum = tileMaxSum.get(new IntPair((int) (cNode.getLat()/latTile), (int) (cNode.getLon()/lonTile)));
             if (cMaxSum.sum!=0) probabilities[pos] = probabilities[pos] * cMaxSum.max/cMaxSum.sum;
             pos++;
         }

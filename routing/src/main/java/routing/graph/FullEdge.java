@@ -40,9 +40,9 @@ public class FullEdge extends Edge {
         if (start.getStop() != stop.getStart()) throw new IllegalArgumentException("Attached edge should start where the attaching edge ends");
         double outLen = Math.round((start.getLength()+stop.getLength())*100)/100.;
         FullEdge out = new FullEdge(id, start.getStart(), stop.getStop(), outLen,Math.round((start.getHeightDif()+stop.getHeightDif())*100)/100.,
-                start.wFastConst+stop.wFastConst, (start.wFastLin*start.getLength()+stop.wFastLin*stop.getLength())/outLen,
-                start.wAttrConst+stop.wAttrConst, (start.wAttrLin*start.getLength()+stop.wAttrLin*stop.getLength())/outLen,
-                start.wSafeConst+stop.wSafeConst, (start.wSafeLin*start.getLength()+stop.wSafeLin*stop.getLength())/outLen);
+                start.wFastConst+stop.wFastConst, outLen!=0? (start.wFastLin*start.getLength()+stop.wFastLin*stop.getLength())/outLen : 0,
+                start.wAttrConst+stop.wAttrConst, outLen!=0? (start.wAttrLin*start.getLength()+stop.wAttrLin*stop.getLength())/outLen : 0,
+                start.wSafeConst+stop.wSafeConst, outLen!=0? (start.wSafeLin*start.getLength()+stop.wSafeLin*stop.getLength())/outLen : 0);
         out.shadow = new int[start.shadow.length+stop.shadow.length];
         System.arraycopy(start.shadow, 0, out.shadow, 0, start.shadow.length);
         System.arraycopy(stop.shadow, 0, out.shadow, start.shadow.length, stop.shadow.length);

@@ -166,12 +166,16 @@ class BikeProfile(Profile):
 		else:
 			wayAttrs['allows_bikes'] = '0'
 		# Add direction
-		if ('oneway' in tags) and not ('cycleway' in tags and (tags['cycleway'] in ['opposite', 'opposite_lane', 'opposite_track'])) and not ('oneway:bicycle' in tags and tags['oneway:bicycle'] == 'yes'):
+		oneway_tag = None
+		if ('oneway:bicycle' in tags):
+			oneway_tag = 'oneway:bicycle'
+		elif ('oneway' in tags) and not ('cycleway' in tags and (tags['cycleway'] in ['opposite', 'opposite_lane', 'opposite_track'])):
+			oneway_tag = 'oneway'
+		
+		if oneway_tag and (tags[oneway_tag] == 'yes' or tags[oneway_tag] == '1'):
 			tags['bicycle_oneway'] = '1'
-			if (tags['oneway'] == '-1'):
-				tags['bicycle_oneway'] = '-1'
-				if ('startNode' in wayAttrs and 'stopNode' in wayAttrs):
-					(wayAttrs['startNode'], wayAttrs['stopNode']) = (wayAttrs['stopNode'], wayAttrs['startNode'])
+		elif oneway_tag and tags[oneway_tag] == '-1':
+			tags['bicycle_oneway'] = '-1'
 		else:
 			tags['bicycle_oneway'] = '0'
 		return tags

@@ -149,82 +149,13 @@ public class Tree {
         tree.put("ways", treeWays);
         JSONArray treeStarts = new JSONArray();
         for (TreeNode r : root.getChildren()) {
-            if (r.getNode()!=null) treeStarts.add(r.getNode().getId());
+            Node n = r.getNode();
+            if (n!=null) {
+                if (n instanceof SPGraph.NodePair) treeStarts.add(((SPGraph.NodePair) n).e.getId());
+                else treeStarts.add(n.getId());
+            }
         }
         tree.put("starts", treeStarts);
         trees.add(tree);
-    }
-    public void writeLong(JSONObject j) {
-        HashSet<Node> nodes = new HashSet<>();
-        for (TreeNode r : root.getChildren()) {
-            Edge e = r.edgeFromParent;
-            if (e!=null) {
-                nodes.add(e.getStart());
-                nodes.add(e.getStop());
-            }
-        }
-        // Bounds
-        if (!j.containsKey("bounds")) {
-            JSONObject bounds = new JSONObject();
-            j.put("bounds", bounds);
-            bounds.put("maxlon", Double.toString(-Double.MAX_VALUE));
-            bounds.put("minlon", Double.toString(Double.MAX_VALUE));
-            bounds.put("maxlat", Double.toString(-Double.MAX_VALUE));
-            bounds.put("minlat", Double.toString(Double.MAX_VALUE));
-        }
-        JSONObject bounds = (JSONObject) j.get("bounds");
-        double maxLon = Double.parseDouble((String) bounds.get("maxlon"));
-        double minLon = Double.parseDouble((String) bounds.get("minlon"));
-        double maxLat = Double.parseDouble((String) bounds.get("maxlat"));
-        double minLat = Double.parseDouble((String) bounds.get("minlat"));
-        for (Node n: nodes) {
-            maxLon = Math.max(maxLon, n.getLon());
-            minLon = Math.min(minLon, n.getLon());
-            maxLat = Math.max(maxLat, n.getLat());
-            minLat = Math.min(minLat, n.getLat());
-        }
-        bounds.put("maxlon", Double.toString(maxLon));
-        bounds.put("minlon", Double.toString(minLon));
-        bounds.put("maxlat", Double.toString(maxLat));
-        bounds.put("minlat", Double.toString(minLat));
-        // Nodes
-        if (!j.containsKey("node")) {
-            j.put("node", new JSONArray());
-        }
-        JSONArray node = (JSONArray) j.get("node");
-        HashSet<Long> nodeIds = new HashSet<>();
-        for (int i = 0; i<node.size(); i++) {
-            nodeIds.add(Long.parseLong((String) ((JSONObject) node.get(i)).get("id")));
-        }
-        for (Node n: nodes) {
-            JSONObject c = new JSONObject();
-            c.put("id", Long.toString(n.getId()));
-            c.put("lat", Double.toString(n.getLat()));
-            c.put("lon", Double.toString(n.getLon()));
-            node.add(c);
-        }
-        // Ways
-        if (!j.containsKey("way")) {
-            j.put("way", new JSONArray());
-        }
-        JSONArray way = (JSONArray) j.get("way");
-        HashSet<Integer> wayIds = new HashSet<>();
-        for (int i = 0; i<way.size(); i++) {
-            wayIds.add(Integer.parseInt((String) ((JSONObject) way.get(i)).get("id")));
-        }
-        for (TreeNode r : root.getChildren()) {
-            Edge e = r.edgeFromParent;
-            if (e!=null && wayIds.add(e.getId())) {
-                JSONObject c = new JSONObject();
-                c.put("id", Integer.toString(e.getId()));
-                c.put("tag_start", Long.toString(e.getStart().getId()));
-                c.put("tag_stop", Long.toString(e.getStop().getId()));
-                JSONArray nd = new JSONArray();
-                nd.add(Long.toString(e.getStart().getId()));
-                nd.add(Long.toString(e.getStop().getId()));
-                c.put("nd", nd);
-                way.add(c);
-            }
-        }
     }
 }

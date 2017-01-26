@@ -1,5 +1,7 @@
 call :createWgr %1
 
+goto :eof
+
 :createWgr
 call python osm2graph ^
 	--verbose ^

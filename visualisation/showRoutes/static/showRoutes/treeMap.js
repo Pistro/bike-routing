@@ -1,13 +1,9 @@
 var map;
 var wayShown;
+var colors = ['red', 'green', 'yellow', 'blue', 'black'];
 function processTree(tree, index) {
 	if (tree.tags == undefined) tree.tags = {};
-	if (index === 0) tree.tags.color = 'red';
-	else if (index === 1) tree.tags.color = 'green';
-	else if (index === 2) tree.tags.color = 'blue';
-	else if (index === 3) tree.tags.color = 'yellow';
-	else if (index === 4) tree.tags.color = 'black';
-	
+	tree.tags.color = colors[index%colors.length];
 }
 function processFile() {
 	for (var i = 0; i<file.trees.length; i++) {
@@ -46,7 +42,6 @@ function map_init_tree(map, treeIndex) {
 	for (var i = 0; i<treeStarts.length; i++) {
 		var node = file.nodes[treeStarts[i]];
 		L.marker([node.lat, node.lng]).addTo(map);
-		console.log(node);
 	}
 }
 function drawWay(wayIndex, c) {

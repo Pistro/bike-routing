@@ -7,7 +7,6 @@
 	{% leaflet_js %}
 	{% leaflet_css %}
 	<link rel="stylesheet" type="text/css" href="{% static 'showRoutes/style.css' %}" />
-	<script type="text/javascript" src="{% static 'showRoutes/d3.v3.min.js' %}"></script>
 	<script type="text/javascript">
 		var file = {{routeString|safe}};
 	</script>
@@ -20,7 +19,7 @@
 </div>
 <div id="rightPanel">
 	<h2 id=treeTitle></h2>
-	<div id=treeInfo>WTF, man?</div>	
+	<div id=treeInfo>.</div>	
 	<h2>Way Details</h2>
 	<div id=details>No way selected.</div>
 </div>

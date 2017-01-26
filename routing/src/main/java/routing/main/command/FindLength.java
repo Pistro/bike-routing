@@ -93,7 +93,7 @@ public class FindLength extends Command {
                 System.out.println("Hypergraph created! Creation time: " + (stop-start)/1000. + "s");
             }
             System.out.println("Starting routing (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)...");
-            CandidateSelector cs = new DistPlSelector(g.getNode(startId));
+            CandidateSelector cs = new DistPlSelector(g.getNode(startId), minLength);
             RouteLengthFinder rlf = new RouteLengthFinder(wb, g.getNode(startId), cs, minLength, maxLength, lambda, strictness, beta, alternatives, g2);
             start = System.currentTimeMillis();
             LinkedList<Path> paths = rlf.findRoutes();

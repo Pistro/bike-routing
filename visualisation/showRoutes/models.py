@@ -6,7 +6,6 @@ class Node(models.Model):
 	id = models.IntegerField('id', primary_key=True)
 	lat = models.FloatField('latitude')
 	lon = models.FloatField('longitude')
-	height = models.DecimalField('height', max_digits=7, decimal_places=2, default=0)
 	
 	def __str__(self):
 		return str(self.id)

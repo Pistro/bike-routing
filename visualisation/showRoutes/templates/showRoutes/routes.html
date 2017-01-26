@@ -7,7 +7,6 @@
 	{% leaflet_js %}
 	{% leaflet_css %}
 	<link rel="stylesheet" type="text/css" href="{% static 'showRoutes/style.css' %}" />
-	<script type="text/javascript" src="{% static 'showRoutes/d3.v3.min.js' %}"></script>
 	<script type="text/javascript">
 		var file = {{routeString|safe}};
 	</script>
@@ -20,13 +19,7 @@
 		<script type="text/javascript" src="{% static 'showRoutes/routeMap.js' %}"></script>
 		{% leaflet_map "yourmap" callback="window.map_init_basic" %}
 	</div>
-    <div id="panel2">
-        <div id="panel2top">
-			<svg id="linegraph"></svg>
-			<script type="text/javascript" src="{% static 'showRoutes/routeProfile.js' %}"></script>
-		</div>
-        <div id="panel2bottom"></div>
-    </div>
+    <div id="panel2"></div>
 </div>
 </body>
 <script type="text/javascript" src="{% static 'showRoutes/routeText.js' %}"></script>

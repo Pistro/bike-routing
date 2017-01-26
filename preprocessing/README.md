@@ -6,11 +6,7 @@
  - Osm2graph: This program matches features from one or more osm data sources and converts the osm representation into a graph representation. Requirements of osm2graph and additional info can be found on [this page](osm2graph.md).
  
 ## Input data
- - The preprocessing algorithm accepts height data as a single GeoTIFF-file.
-   The [EU-DEM](http://www.eea.europa.eu/data-and-maps/data/eu-dem#tab-european-data) is a useful source for European height data. Height data is provided through several TIFF files. Using [gdalinfo](http://www.gdal.org/gdalinfo.html), it is easy to find the corner coordinates of the tile to which a GeoTIFF-file corresponds. This is a part of the [GDAL (Geospatial Data Abstraction Library) project](http://www.gdal.org/index.html). 
-   Since the algorithm accepts only a single height data file and a region may lay on the border of several tiles of height data, it may be necessary to merge information. The [gdal_merge.py](http://www.gdal.org/gdal_merge.html) script, which is also a part of the [GDAL project](http://www.gdal.org/index.html) can be used to merge GeoTIFF data.
-   As a shortcut, we provide a dataset containing the height data of [Belgium](https://www.dropbox.com/s/glqgm0gmvwyduse/belgium_tif.tar.gz) and [France](https://www.dropbox.com/s/remy2rcuy0no83g/france_tif.tar.gz).
- - The osm data of the region that is processed should also be provided as an .osm.pbf file. Via [geofabrik](http://download.geofabrik.de/), osm data can be downloaded in this format for regions of entire continents.
+The osm data of the region that is processed should also be provided as an .osm.pbf file. Via [geofabrik](http://download.geofabrik.de/), osm data can be downloaded in this format for regions or entire continents.
  
 ## Execution
 Before starting the preprocessing, a folder 'source' should be created in the main bike-routing directory. The osm data file should be moved into this folder and should be named 'regionName.osm.pbf'. Similarly, the height data file should be moved into this folder and be named 'regionName.tif'.
@@ -32,6 +28,7 @@ The preprocessing process will create several files in the source directory:
  - regionName_fixture.xml: This file can be used to create the [visualisation database](../visualisation).
  - regionName.wgr: This file contains a graph representation of the entire roadnetwork of the region, including perceived weights. The file serves as an input for the [routing step](../routing).
  
-After preprocessing the Belgian dataset, some subregions can be extracted by executing `bash\windows\extractRegionsBelgium.bat` (for Windows) or `bash bash/unix/extractRegionsBelgium.sh` (for Unix).
+## Extraction of subregions
+When preprocessing the Belgian dataset, some subregions can be extracted by executing `bash\windows\extractRegionsBelgium.bat` (for Windows) or `bash bash/unix/extractRegionsBelgium.sh` (for Unix).
 Using the preprocessed data in the `belgium_inter.osm` file, similar 'intermediate' files are created for east-flanders, ghent and geraardsbergen. For each of these regions, a weighted graph representation is also generated.
 Additionaly, for each region, a json file is created that is useful for studying the relation between perceived weight and walking distance. The file can be visualised using the 'pleasantness' page described in [visualisations](../visualisation).

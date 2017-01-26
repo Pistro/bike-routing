@@ -18,6 +18,7 @@ import java.util.*;
 public abstract class CandidateSelector {
     protected Random r = new Random();
     protected ArrayList<Candidate> candidates;
+
     double[] probabilities;
 
     public CandidateSelector() {}
@@ -36,6 +37,8 @@ public abstract class CandidateSelector {
             //JsonWriter jw = new JsonWriter(jo);
             //jw.write("nodes_" + i + ".json");
             Candidate c = selectCandidate();
+            double max = 0;
+            for (double d: probabilities) if (d>max) max = d;
             if (c==null) break;
             else out.add(c);
         }

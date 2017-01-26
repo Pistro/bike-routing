@@ -8,4 +8,4 @@ for (var i = 0; i<file.routes.length; i++) {
 	var routeTags = route.tags;
 	info += "<p><h3>" + (routeTags.name == undefined? "Tour " + i : routeTags.name) + "</h3>" + tagsToString(routeTags, ["name"]) + "</p>";
 }
-panel2bottom.innerHTML = info;
+panel2.innerHTML = info;

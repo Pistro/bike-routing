@@ -14,9 +14,6 @@ from scores import *
 def index(request):
     return render(request, 'showRoutes/index.html')
 	
-def height(request):
-    return render(request, 'showRoutes/height.html')
-	
 def getProfile(profileName):
 	profiles = profile.Profile.__subclasses__()
 	out = None
@@ -69,7 +66,7 @@ def addWayInformation(out, wayHolders):
 	nodes = dict()
 	for nodeId in nodeDict:
 		foundNode = nodeDict[nodeId]
-		nodes[nodeId] = dict({'lat': foundNode.lat, 'lng': foundNode.lon, 'height': float(foundNode.height)})
+		nodes[nodeId] = dict({'lat': foundNode.lat, 'lng': foundNode.lon})
 	out['nodes'] = nodes
 
 def detail(request):
@@ -82,8 +79,3 @@ def detail(request):
 		return render(request, 'showRoutes/routes.html', {'routeString': json.dumps(out)})
 	else:
 		pass
-		
-def heightDetail(request):
-	out = json.loads(request.FILES['file'].read().decode("utf-8"))
-	addWayInformation(out, out['routes'])
-	return render(request, 'showRoutes/routes2.html', {'routeString': json.dumps(out)})

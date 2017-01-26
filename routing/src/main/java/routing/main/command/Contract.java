@@ -57,10 +57,9 @@ public class Contract extends Command {
             start = System.currentTimeMillis();
             xmlReader.parse(in);
             stop = System.currentTimeMillis();
+            System.out.println("Contracted graph written. Writing time: " + 1.0*(stop-start)/1000);
         } catch (Exception e) {
             // XML parser exceptions and stuff. Should never occur...
         }
-        System.out.println("Contracted graph written. Writing time: " + 1.0*(stop-start)/1000);
-
     }
 }

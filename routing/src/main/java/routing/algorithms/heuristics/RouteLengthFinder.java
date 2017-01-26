@@ -4,7 +4,6 @@ import routing.algorithms.candidateselection.*;
 import routing.graph.*;
 import routing.graph.weights.PoisonedWeightGetter;
 import routing.graph.weights.WeightBalancer;
-import sun.awt.image.ImageWatched;
 
 import java.util.*;
 
@@ -64,11 +63,7 @@ public class RouteLengthFinder {
         long stop = System.nanoTime();
         forwardTime = (stop-go)/1000000;
         cs.initialize(cands);
-        //JSONObject jo = cs.toJSON();
-        //JsonWriter jw = new JsonWriter(jo);
-        //jw.write("nodes.json");
         LinkedList<Candidate> candidates = cs.selectCandidates(nrAttempts);
-        //for (Candidate c: cands) if (((SPGraph.NodePair) c.node.getNode()).e.getId()==833188309L) candidates.add(c);
         LinkedList<Path> paths = new LinkedList<>();
         for (Candidate c: candidates) {
             Path forward = c.node.getPathFromRoot();
@@ -94,6 +89,7 @@ public class RouteLengthFinder {
         while (!q.isEmpty()) {
             Candidate cur = q.poll();
             Node curN = cur.node.getNode();
+            cur.node.connect();
             if (((SPGraph.NodePair) curN).e == start.e) ends.add(curN);
             if (added.add(curN)) {
                 boolean boundaryNode = false;
@@ -166,6 +162,9 @@ public class RouteLengthFinder {
             forwardLength += e.getLength();
             forwardStop = e.getStop();
         }
+        // Extra cost is a set of nodes for which have incoming edges with an increased cost
+        HashSet<Node> extraCost = new HashSet<>();
+        for (Map.Entry<Node, PathInfo> en: stopInfo.entrySet()) if (en.getValue().length>0.3*maxLength/2) extraCost.add(en.getKey());
         // Dijkstra algorithm
         PriorityQueue<Candidate> candidates = new PriorityQueue<>((o1, o2) -> o1.weight<o2.weight? -1 : (o1.weight>o2.weight? 1 : 0));
         HashSet<Node> addedNodes = new HashSet<>();
@@ -185,8 +184,8 @@ public class RouteLengthFinder {
                         forwardLength += e.getLength();
                         forwardStop = e.getStop();
                     }
-                    if (minLength<=curStopInfo.length+curCan.length+epsilon && curStopInfo.length+curCan.length<=maxLength+epsilon &&
-                            (curCan.node.getEdgeFromParent()==null || ((SPGraph.NodePair) curCan.node.getEdgeFromParent().getStop()).e!=((SPGraph.NodePair) curStopInfo.penultimate).e)) {
+                    if (minLength<=curStopInfo.length+curCan.length+epsilon && curStopInfo.length+curCan.length<=maxLength+epsilon && (curCan.node.getEdgeFromParent()==null ||
+                            ((SPGraph.NodePair) curCan.node.getEdgeFromParent().getStop()).e!=((SPGraph.NodePair) curStopInfo.penultimate).e)) {
                         Path returnPath = curCan.node.getPathFromRoot();
                         returnPath.flipForward();
                         Path forwardPart = new Path(forwardPath);
@@ -207,10 +206,12 @@ public class RouteLengthFinder {
                 // Add all the neighbours of current to toAdd and their id's to considered id's
                 for (Edge e : curNode.getInEdges()) {
                     Candidate tn = new Candidate(new Tree.TreeNode(curCan.node, e.getStart(), e), curCan.weight + wg.getWeight(e, curCan.length), curCan.length + e.getLength());
+                    if (extraCost.contains(e.getStop())) tn.weight += 50*e.getLength();
                     HashSet<Node> encountered = new HashSet<>(); // Cycle detection
                     while (tn.node.getNode().getInEdges().size()==1 && tn.length<=maxLength+epsilon) {
                         e = tn.node.getNode().getInEdges().getFirst();
                         tn = new Candidate(new Tree.TreeNode(tn.node, e.getStart(), e), tn.weight+wg.getWeight(e, tn.length), tn.length + e.getLength());
+                        if (extraCost.contains(e.getStop())) tn.weight += 50*e.getLength();
                         if (!encountered.add(e.getStart())) {
                             tn.length = Double.MAX_VALUE;
                             break;
@@ -229,6 +230,4 @@ public class RouteLengthFinder {
         }
         return bestPath;
     }
-
-
 }

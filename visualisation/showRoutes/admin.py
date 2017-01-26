@@ -3,8 +3,8 @@ from django.contrib import admin
 from .models import *
 
 class NodeAdmin(admin.ModelAdmin):
-	fields = ('id', ('lat', 'lon'), 'height')
-	list_display = ('id', 'lat', 'lon', 'height')
+	fields = ('id', ('lat', 'lon'))
+	list_display = ('id', 'lat', 'lon')
 	
 class WayAdmin(admin.ModelAdmin):
     list_display = ('id', 'orgWayId', 'orgWaySubId', 'wayNodeIds', 'wayTags')

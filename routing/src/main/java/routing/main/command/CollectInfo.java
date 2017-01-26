@@ -3,6 +3,7 @@ package routing.main.command;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import routing.IO.XMLSPGraphReader;
+import routing.graph.Edge;
 import routing.graph.Graph;
 import routing.graph.Node;
 import routing.graph.SPGraph;
@@ -21,7 +22,7 @@ import java.util.Map;
  * Created by Pieter on 27/12/2016.
  */
 public class CollectInfo extends Command {
-    private WeightBalancer wReach;
+    private WeightBalancer wb;
     private double reach;
     private String hyperIn;
 
@@ -39,7 +40,7 @@ public class CollectInfo extends Command {
         // Optional arguments
         hyperIn = ap.getString("hyperIn", null);
         reach = ap.getDouble("reach", -1);
-        wReach = new WeightBalancer(ap.getDouble("wFast", DefaultParameters.WFAST), ap.getDouble("wAttr", DefaultParameters.WATTR), ap.getDouble("wSafe", DefaultParameters.WSAFE));
+        wb = new WeightBalancer(ap.getDouble("wFast", DefaultParameters.WFAST), ap.getDouble("wAttr", DefaultParameters.WATTR), ap.getDouble("wSafe", DefaultParameters.WSAFE));
     }
 
     public void execute(Graph g) {
@@ -58,12 +59,13 @@ public class CollectInfo extends Command {
             } else if (reach != -1) {
                 System.out.println("Creating hypergraph...");
                 start = System.currentTimeMillis();
-                g = new SPGraph(g, reach, true, wReach);
+                g = new SPGraph(g, reach, true, wb);
                 stop = System.currentTimeMillis();
                 System.out.println("Hypergraph created! Creation time: " + (stop - start) / 1000. + "s");
             }
             System.out.println("# vertices: " + g.getOrder());
             System.out.println("# edges: " + g.getSize());
+            System.out.println("Average weight: " + getAverageWeight(g));
             System.out.println("reaches (" + nrReaches(g)  + "/" + g.getOrder() + "): " + arrayToString(getReachBins(g)));
         } catch (ParserConfigurationException |IOException |SAXException e) {
             e.printStackTrace();
@@ -91,6 +93,17 @@ public class CollectInfo extends Command {
         int [] reaches = new int[nrBins];
         for (Map.Entry<Integer, Integer> en: reachBins.entrySet()) reaches[en.getKey()] = en.getValue();
         return reaches;
+    }
+
+    private double getAverageWeight(Graph g) {
+        double w = 0, l = 0;
+        for (Node n: g.getNodes().values()) {
+            for (Edge e: n.getOutEdges()) {
+                w += wb.getWeight(e);
+                l += e.getLength();
+            }
+        }
+        return w/l;
     }
 
     private String arrayToString(int [] ar) {

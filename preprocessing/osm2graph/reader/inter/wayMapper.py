@@ -166,8 +166,7 @@ class WayMapper(InterReader):
 							add = True
 							break
 					except TopologicalError:
-						add = True
-						break
+						pass
 				if (add):
 					for ib in innerBounds:
 						if (ib.contains(ls)):

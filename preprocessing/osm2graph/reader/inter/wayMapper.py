@@ -161,7 +161,11 @@ class WayMapper(InterReader):
 				ls = LineString([(box[0], box[1]), (box[2], box[3])])
 				add = False
 				for ob in outerBounds:
-					if (ls.intersects(ob)):
+					try:
+						if (ls.intersects(ob)):
+							add = True
+							break
+					except TopologicalError:
 						add = True
 						break
 				if (add):

@@ -4,6 +4,7 @@ from haversine import haversine
 from shapely.geometry import Point
 from shapely.geometry import LineString
 from shapely.geometry import Polygon
+from shapely.geos import TopologicalError
 
 class WayMapper(InterReader):
 	def __init__(self, opts):

@@ -99,7 +99,7 @@ public class InterferenceGraph {
         private final double p_max;
         private final double d_max;
         private ApproximateEdge(Path p, double pos) {
-            super(0, p.getEdges().getFirst().getStart(), p.getEnd(), p.getLength(), 0);
+            super(0, p.getEdges().getFirst().getStart(), p.getEnd(), p.getLength());
             this.edges = new LinkedList<>(p.getEdges());
             // dMax
             double d_max = 0;

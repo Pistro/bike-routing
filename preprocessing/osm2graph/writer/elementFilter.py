@@ -3,11 +3,11 @@ from base.core import OsmWriter
 class ElementFilter(OsmWriter):
 	def __init__(self, opts):
 		rules = opts['rules'].split(',')
-		exceptions = { 'st_*': False, 'write': True } # Pol is policy for exact matches, star is policy for unspecified children
+		self.current = { 'st_*': False, 'write': True } # Pol is policy for exact matches, star is policy for unspecified children
 		for rule in rules:
 			accept = (rule[0] == '+')
 			rule = rule[1:]
-			currentNode = exceptions
+			currentNode = self.current
 			condition = None
 			while not (rule == '' or rule == '*'):
 				nodeRest = rule.split('.', 1)
@@ -27,16 +27,14 @@ class ElementFilter(OsmWriter):
 					currentNode['conditions'] = list()
 				if ('~' in condition):
 					kv = condition.split('~', 1)
-					currentNode['conditions'].append((accept, rule=='*', kv[0], kv[1]))
+					currentNode['conditions'].append((accept, accept, kv[0], kv[1]))
 				else:
-					currentNode['conditions'].append((accept, rule=='*', condition))
+					currentNode['conditions'].append((accept, accept, condition))
 			else:
 				if (rule == '*' or (not accept)):
 					currentNode['st_*'] = accept
 				if not (rule == '*'):
 					currentNode['st_pol'] = accept
-		exceptions['*'] = exceptions['st_*']
-		self.current = exceptions
 		self.extra = 0
 				
 	def startElement(self, name, attrs):
@@ -47,10 +45,8 @@ class ElementFilter(OsmWriter):
 			if 'conditions' in self.current:
 				for condition in self.current['conditions']:
 					if (condition[2] in attrs and (len(condition)==3 or attrs[condition[2]] == condition[3])):
-						if condition[1]:
-							self.current['*'] = condition[0]
-						else:
-							self.current['pol'] = condition[0]
+						self.current['*'] = condition[0]
+						self.current['pol'] = condition[1]
 		else:
 			self.extra += 1
 		

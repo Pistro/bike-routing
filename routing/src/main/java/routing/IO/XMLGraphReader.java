@@ -75,7 +75,6 @@ public class XMLGraphReader extends DefaultHandler {
                 double score_fast_lin = Double.parseDouble(curTags.get("score_fast_lin"));
                 double score_fast_const = Double.parseDouble(curTags.get("score_fast_const"));
                 double score_fast = score_fast_lin*length+score_fast_const;
-                double height_dif = Double.parseDouble(curTags.get("height_dif"));
                 Node start, stop;
                 if (!dynamicNodes) {
                     start = graph.getNode(Long.parseLong(curTags.get("start_node")));
@@ -90,8 +89,8 @@ public class XMLGraphReader extends DefaultHandler {
                     start = tmp;
                 }
                 Edge e1;
-                if (fullEdges) e1 = new FullEdge(id, start, stop, length, height_dif, score_fast_const, score_fast_lin, score_attr_const, score_attr_lin, score_safe_const, score_safe_lin);
-                else e1 = new SimpleEdge(id, start, stop, length, height_dif, score_fast, score_attr, score_safe);
+                if (fullEdges) e1 = new FullEdge(id, start, stop, length, score_fast_const, score_fast_lin, score_attr_const, score_attr_lin, score_safe_const, score_safe_lin);
+                else e1 = new SimpleEdge(id, start, stop, length, score_fast, score_attr, score_safe);
                 int nrSegments = segments.size();
                 if (nrSegments != 0) {
                     e1.shadow = new int[nrSegments];
@@ -102,8 +101,8 @@ public class XMLGraphReader extends DefaultHandler {
                 }
                 if (curTags.get("bicycle_oneway").equals("0")) {
                     Edge e2;
-                    if (fullEdges) e2 = new FullEdge(id, stop, start, length, height_dif, score_fast_const, score_fast_lin, score_attr_const, score_attr_lin, score_safe_const, score_safe_lin);
-                    else e2 = new SimpleEdge(id, stop, start, length, height_dif, score_fast, score_attr, score_safe);
+                    if (fullEdges) e2 = new FullEdge(id, stop, start, length, score_fast_const, score_fast_lin, score_attr_const, score_attr_lin, score_safe_const, score_safe_lin);
+                    else e2 = new SimpleEdge(id, stop, start, length, score_fast, score_attr, score_safe);
                     if (nrSegments != 0) {
                         e2.shadow = new int[nrSegments];
                         for (int i = 0; i<nrSegments; i++) e2.shadow[i] = segments.get(nrSegments-1-i);

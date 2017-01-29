@@ -521,7 +521,7 @@ public class ExhaustiveRouteLengthFinder {
         private final double wFast;
         private final double wAttr;
         private ApproximateEdge(Path bestPath, double pMin, double pMax) {
-            super(0, bestPath.getStart(), bestPath.getEnd(), bestPath.getLength(), bestPath.getHeightDif());
+            super(0, bestPath.getStart(), bestPath.getEnd(), bestPath.getLength());
             this.pMin = pMin;
             this.pMax = pMax;
             // Set shadow

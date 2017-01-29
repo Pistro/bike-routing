@@ -12,18 +12,16 @@ public abstract class Edge {
     private Node start;
     private Node stop;
     private final double length;
-    private final double heightDif;
     public int [] shadow = null;
-    public Edge(int id, Node start, Node stop, double length, double heightDif) {
+    public Edge(int id, Node start, Node stop, double length) {
         this.id = id;
         idCnt = Math.max(idCnt, id+1);
         this.start = start;
         this.stop = stop;
         this.length = length;
-        this.heightDif = heightDif;
     }
     public Edge(Edge e) {
-        this(e.id, e.getStart(), e.getStop(), e.length, e.heightDif);
+        this(e.id, e.getStart(), e.getStop(), e.length);
     }
     public void couple() {
         start.addOutEdge(this);
@@ -39,7 +37,6 @@ public abstract class Edge {
         return new HashMap<>();
     }
     public double getLength() { return length; }
-    public double getHeightDif() { return heightDif; }
     public int getId() { return id; }
     public Node getStart() { return start; }
     public Node getStop() { return stop; }

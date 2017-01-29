@@ -160,7 +160,7 @@ public class PoisonedWeightGetter {
         public final double dMax;
 
         private ApproximateEdge(Path p, double pMin) {
-            super(0, p.getEdges().getFirst().getStart(), p.getEnd(), p.getLength(), 0);
+            super(0, p.getEdges().getFirst().getStart(), p.getEnd(), p.getLength());
             this.pMin = pMin;
             // dMax
             double dMax = 0;

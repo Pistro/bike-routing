@@ -12,8 +12,8 @@ public class FullEdge extends Edge {
     public final double wAttrConst;
     public final double wSafeLin;
     public final double wSafeConst;
-    public FullEdge(int id, Node start, Node stop, double length, double heightDif, double wFastConst, double wFastLin, double wAttrConst, double wAttrLin, double wSafeConst, double wSafeLin) {
-        super(id, start, stop, length, heightDif);
+    public FullEdge(int id, Node start, Node stop, double length, double wFastConst, double wFastLin, double wAttrConst, double wAttrLin, double wSafeConst, double wSafeLin) {
+        super(id, start, stop, length);
         this.wFastConst = wFastConst;
         this.wFastLin = wFastLin;
         this.wAttrConst = wAttrConst;
@@ -39,7 +39,7 @@ public class FullEdge extends Edge {
     public static FullEdge join(int id, FullEdge start, FullEdge stop) {
         if (start.getStop() != stop.getStart()) throw new IllegalArgumentException("Attached edge should start where the attaching edge ends");
         double outLen = Math.round((start.getLength()+stop.getLength())*100)/100.;
-        FullEdge out = new FullEdge(id, start.getStart(), stop.getStop(), outLen,Math.round((start.getHeightDif()+stop.getHeightDif())*100)/100.,
+        FullEdge out = new FullEdge(id, start.getStart(), stop.getStop(), outLen,
                 start.wFastConst+stop.wFastConst, outLen!=0? (start.wFastLin*start.getLength()+stop.wFastLin*stop.getLength())/outLen : 0,
                 start.wAttrConst+stop.wAttrConst, outLen!=0? (start.wAttrLin*start.getLength()+stop.wAttrLin*stop.getLength())/outLen : 0,
                 start.wSafeConst+stop.wSafeConst, outLen!=0? (start.wSafeLin*start.getLength()+stop.wSafeLin*stop.getLength())/outLen : 0);
@@ -53,7 +53,6 @@ public class FullEdge extends Edge {
         HashMap<String, String> out = new HashMap<String, String>();
         out.put("start_node", Long.toString(getStart().getId()));
         out.put("end_node", Long.toString(getStop().getId()));
-        out.put("height_dif", Double.toString(getHeightDif()));
         out.put("length", Double.toString(getLength()));
         out.put("score_safe_lin", Double.toString(wSafeLin));
         out.put("score_safe_const", Double.toString(wSafeConst));

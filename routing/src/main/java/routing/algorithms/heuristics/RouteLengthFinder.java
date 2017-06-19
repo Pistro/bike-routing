@@ -1,5 +1,8 @@
 package routing.algorithms.heuristics;
 
+import jdk.nashorn.internal.ir.debug.JSONWriter;
+import org.json.simple.JSONObject;
+import routing.IO.JsonWriter;
 import routing.algorithms.candidateselection.*;
 import routing.graph.*;
 import routing.graph.weights.PoisonedWeightGetter;
@@ -31,7 +34,8 @@ public class RouteLengthFinder {
     public long forwardTime;
     public long backwardTime = 0;
 
-    public RouteLengthFinder(WeightBalancer wb, Node start, CandidateSelector cs, double minLength, double maxLength, double lambda, double strictness, double beta, int nrAttempts, SPGraph hyper) {
+    public RouteLengthFinder(Node start, CandidateSelector cs, double minLength, double maxLength, double lambda, double strictness, double beta, int nrAttempts, SPGraph hyper) {
+        this.wb = hyper.getWeightBalancer();
         long go = System.nanoTime();
         this.nearbyNodes = hyper.getSubgraphFast(start);
         long stop = System.nanoTime();
@@ -48,7 +52,6 @@ public class RouteLengthFinder {
         }
         this.start = st;
         this.cs = cs;
-        this.wb = wb;
         this.lambda = lambda;
         this.strictness = strictness;
         this.beta = beta;
@@ -64,6 +67,7 @@ public class RouteLengthFinder {
         forwardTime = (stop-go)/1000000;
         cs.initialize(cands);
         LinkedList<Candidate> candidates = cs.selectCandidates(nrAttempts);
+        //for (Candidate c: cands) if (((SPGraph.NodePair) c.node.getNode()).e.getId()==499088658L) candidates.add(c);
         LinkedList<Path> paths = new LinkedList<>();
         for (Candidate c: candidates) {
             Path forward = c.node.getPathFromRoot();
@@ -88,8 +92,8 @@ public class RouteLengthFinder {
         HashSet<Node> added = new HashSet<>();
         while (!q.isEmpty()) {
             Candidate cur = q.poll();
+            //cur.node.connect(); // DEBUG
             Node curN = cur.node.getNode();
-            cur.node.connect();
             if (((SPGraph.NodePair) curN).e == start.e) ends.add(curN);
             if (added.add(curN)) {
                 boolean boundaryNode = false;
@@ -111,21 +115,24 @@ public class RouteLengthFinder {
                             break;
                         }
                     }
-                    if (!added.contains(e.getStop())) {
-                        double tourL = cn.length + dc.getDistance(e.getStop(), start);
-                        if (!e.getStop().hasReach() || e.getStop().getReach()+epsilon>=Math.min(cn.length, (minLength-tourL)/2)) {
-                            if (tourL <= maxLength + epsilon) {
-                                q.add(cn);
-                            } else if (cur.length > 0) boundaryNode = true;
-                        }
-                    }
+                    double tourL = cn.length + dc.getDistance(e.getStop(), start);
+                    if (tourL <= maxLength + epsilon) {
+                        if ((!added.contains(e.getStop())) && (!e.getStop().hasReach() || e.getStop().getReach()+epsilon>=Math.min(cn.length, (minLength-tourL)/2)))
+                            q.add(cn);
+                    } else if (cur.length > 0) boundaryNode = true;
                 }
                 double minlenMinCurlen = minLength-cur.length;
                 if (boundaryNode || (minlenMinCurlen<0 || dc.getDistance2(curN, start)+epsilon>=minlenMinCurlen*minlenMinCurlen)) {
-                    if (outEdges.size()>1) candidates.add(cur);
+                    candidates.add(cur);
                 }
             }
         }
+        /*
+        JSONObject o = new JSONObject();
+        t.write(o);
+        JsonWriter jw = new JsonWriter(o);
+        jw.write("../source/output/forwardTree.json");
+        */
         return candidates;
     }
 
@@ -176,7 +183,7 @@ public class RouteLengthFinder {
             Candidate curCan = candidates.poll();
             Node curNode = curCan.node.getNode();
             if (addedNodes.add(curNode)) {
-                curCan.node.connect();
+                //curCan.node.connect(); // DEBUG
                 PathInfo curStopInfo = stopInfo.remove(curNode);
                 if (curStopInfo!=null) {
                     while (!stops.isEmpty() && !stopInfo.containsKey(forwardStop)) {
@@ -228,6 +235,20 @@ public class RouteLengthFinder {
             bestPath.addTag("turn_id_s", ((SPGraph.NodePair) forwardPath.getEnd()).s.getId());
             bestPath.addTag("turn_id_e", ((SPGraph.NodePair) forwardPath.getEnd()).e.getId());
         }
+
+        /*JSONObject o = new JSONObject();
+        tree.write(o);
+        Tree forwardPathTree = new Tree();
+        Tree.TreeNode cn = new Tree.TreeNode(forwardPathTree.getRoot(), forwardPath.getStart(), null);
+        cn.connect();
+        for (Edge e: forwardPath.getEdges()) {
+            cn = new Tree.TreeNode(cn, e.getStop(), e);
+            cn.connect();
+        }
+        forwardPathTree.write(o);
+        JsonWriter jw = new JsonWriter(o);
+        jw.write("../source/output/returnTree.json");*/
+
         return bestPath;
     }
 }

@@ -1,6 +1,6 @@
 var map;
 var wayShown;
-var colors = ['red', 'green', 'yellow', 'blue', 'black'];
+var colors = ['#236693', '#33A02C', '#FB9A99', 'blue', 'black'];
 function processTree(tree, index) {
 	if (tree.tags == undefined) tree.tags = {};
 	tree.tags.color = colors[index%colors.length];
@@ -13,6 +13,13 @@ function processFile() {
 processFile();
 function map_init_basic (mp, options) {
 	map = mp;
+	L.geoJson(belgiumBorder, {style: {
+		color: "black",
+		weight: 2,
+		opacity: 1,
+		fillOpacity: 0.5,
+		fillColor: "white"
+	}}).addTo(map);
 	for (var i = 0; i<file.trees.length; i++) {
 		map_init_tree(mp, i);
 	}
@@ -52,7 +59,7 @@ function drawWay(wayIndex, c) {
 		node = file.nodes[wayNodes[j]];
 		latlngs.push([parseFloat(node.lat), parseFloat(node.lng)])
 	}
-	polyline = L.polyline(latlngs, {color: c}).addTo(map);
+	polyline = L.polyline(latlngs, {color: c, opacity: 1}).addTo(map);
 	polyline.on('mousemove', showWayInfo);
 	polyline.index = wayIndex;
 }

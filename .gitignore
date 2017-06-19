@@ -1,5 +1,8 @@
 script.bat
-/source
+/source/graph
+/source/input
+/source/inter
+/source/output
 /examples
 /source_old
 /papers

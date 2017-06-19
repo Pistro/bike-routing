@@ -7,6 +7,7 @@ var addedNodes = {};
 var nodeShown;
 var markers = [];
 var addedMarkers = [];
+var topBorder;
 
 // Initialize
 function initialize(file) {
@@ -31,6 +32,7 @@ function reinitializeMap() {
 	for (attr in addedNodes) {
 		map.removeLayer(addedNodes[attr]);
 	}
+	if (topBorder) map.removeLayer(topBorder)
 	addedNodes = {};
 	for (var i = 0; i<addedMarkers.length; i++) {
 		map.removeLayer(addedMarkers[i]);
@@ -71,6 +73,13 @@ function loadFile() {
 
 function map_init_basic(mp, options) {
 	map = mp;
+	L.geoJson(belgiumBorder, {"style": {
+		"color": "black",
+		"weight": 2,
+		"opacity": 1,
+		"fillOpacity": 0.7,
+		"fillColor": "white"
+	}}).addTo(map);
 }
 
 function drawMap(e) {
@@ -84,13 +93,19 @@ function drawMap(e) {
 		var marker = L.marker([markpoint.lat, markpoint.lon]).addTo(map);
 		addedMarkers.push(marker);
 	}
+	topBorder = L.geoJson(belgiumBorder, {"style": {
+		"color": "black",
+		"weight": 2,
+		"opacity": 1,
+		"fillOpacity": 0
+	}}).addTo(map);
 }
 	
 function drawNode(node) {
 	var c;
 	if (node.hasOwnProperty(scoreAtt)) {
 		col = numberToColorHsl(parseFloat(node[scoreAtt]), minScore, maxScore),
-		c = L.circle([node.lat, node.lon], 20, {color: col, fillOpacity: 1, opacity: 1 }).addTo(map);
+		c = L.circle([node.lat, node.lon], 20, {color: col, opacity: 1, fillColor: col, fillOpacity: 1}).addTo(map);
 		c.on('mousemove', showNodeInfo);
 		c.index = node.id;
 	} else {
@@ -148,9 +163,11 @@ function numberToColorHsl(score, mi, ma) {
 	if (score<0) score = 0;
 	// as the function expects a value between 0 and 1, and red = 0° and green = 120°
     // we convert the input to the appropriate hue value
-    var hue = score * 120 / 360;
+    var hue = (169+(144-169)*score)/360;
+	var saturation = (46+(100-46)*score)/360;
+	var lightness = (86+(13-86)*score)/100;
     // we convert hsl to rgb (saturation 100%, lightness 50%)
-    var rgb = hslToRgb(hue, 1, .5);
+    var rgb = hslToRgb(hue, saturation, lightness);
     // we format to css value and return
     return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')'; 
 }

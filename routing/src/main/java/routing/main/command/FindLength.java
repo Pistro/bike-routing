@@ -94,7 +94,7 @@ public class FindLength extends Command {
             }
             System.out.println("Starting routing (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)...");
             CandidateSelector cs = new DistPlSelector(g.getNode(startId), minLength);
-            RouteLengthFinder rlf = new RouteLengthFinder(wb, g.getNode(startId), cs, minLength, maxLength, lambda, strictness, beta, alternatives, g2);
+            RouteLengthFinder rlf = new RouteLengthFinder(g.getNode(startId), cs, minLength, maxLength, lambda, strictness, beta, alternatives, g2);
             start = System.currentTimeMillis();
             LinkedList<Path> paths = rlf.findRoutes();
             stop = System.currentTimeMillis();

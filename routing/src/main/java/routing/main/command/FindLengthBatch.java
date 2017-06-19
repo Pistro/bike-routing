@@ -103,7 +103,7 @@ public class FindLengthBatch extends Command {
                 System.out.println("Starting routing " + nr + "/" + nodeInfo.size() + " (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)... " + en.getKey().getId());
                 CandidateSelector cs = new DistPlSelector(en.getKey(), minLength);
                 start = System.currentTimeMillis();
-                RouteLengthFinder rlf = new RouteLengthFinder(wb, en.getKey(), cs, minLength, maxLength, lambda, strictness, beta, alternatives, g2);
+                RouteLengthFinder rlf = new RouteLengthFinder(en.getKey(), cs, minLength, maxLength, lambda, strictness, beta, alternatives, g2);
                 LinkedList<Path> paths = rlf.findRoutes();
                 stop = System.currentTimeMillis();
                 System.out.println("Routing finished " + nr + "/" + nodeInfo.size() + " (length: " + minLength/1000. + "-" + maxLength/1000. + "km, " + alternatives + " attempts)! Routing time: " + (stop-start)/1000. + "s");

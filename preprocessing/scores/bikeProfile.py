@@ -177,7 +177,7 @@ class BikeProfile(Profile):
 		elif oneway_tag and tags[oneway_tag] == '-1':
 			tags['bicycle_oneway'] = '-1'
 		else:
-			tags['bicycle_oneway'] = '0'
+			tags['bicycle_oneway'] = '0'		
 		return tags
 		
 	@classmethod

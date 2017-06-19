@@ -1,6 +1,6 @@
 var map;
 var wayShown;
-var colors = ['#236693', '#33A02C', '#FB9A99', 'blue', 'black'];
+var colors = ['#33A02C', '#236693', '#FB9A99', 'blue', 'black'];
 function processTree(tree, index) {
 	if (tree.tags == undefined) tree.tags = {};
 	tree.tags.color = colors[index%colors.length];

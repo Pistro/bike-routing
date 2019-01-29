@@ -4,6 +4,7 @@ import org.xml.sax.XMLReader;
 import routing.IO.XMLGraphWriter;
 import routing.algorithms.exact.ComponentDiscovery;
 import routing.algorithms.exact.SimpleContractor;
+import routing.graph.Edge;
 import routing.graph.Graph;
 import routing.graph.Node;
 import routing.main.ArgParser;
@@ -26,10 +27,6 @@ public class Contract extends Command {
         super(a);
     }
 
-    public boolean loadNodes() { return false; }
-
-    public boolean loadFullEdges() { return true; }
-
     public String getName() {
         return "contract";
     }
@@ -51,7 +48,9 @@ public class Contract extends Command {
         try {
             XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
             XMLGraphWriter xmlGw = new XMLGraphWriter(out);
-            xmlGw.setNodeWhiteList(g.getNodes().keySet());
+            HashSet<Integer> edgeIds = new HashSet<>();
+            for (Edge e: g.getEdges()) edgeIds.add(e.getId());
+            xmlGw.setWayWhiteList(edgeIds);
             xmlGw.setNewWays(c.getNewEdges());
             xmlReader.setContentHandler(xmlGw);
             start = System.currentTimeMillis();

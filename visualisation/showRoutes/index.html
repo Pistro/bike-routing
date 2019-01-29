@@ -1,0 +1,43 @@
+<html>
+<head>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+		integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+		crossorigin=""/>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+		integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+		crossorigin=""></script>
+</head>
+<body>
+	<div id="title">
+		<div class="center-vertical">
+			<h1>Route Visualisation</h1>
+		</div>
+	</div>
+	<div id="full">
+		<div id="leftPanel">
+			<div id="mapid"></div>
+			<script>
+				map = L.map('mapid').setView([0, 0], 2);;
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					attribution: 'Map data &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+					maxZoom: 18
+				}).addTo(map);
+			</script>
+		</div>
+		<div id="rightPanel">
+			<div class="margin">
+				<h2> Config </h2>
+				<form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
+					<fieldset>
+						<input type='file' id='fileinput' accept=".json">
+						<input type='button' id='btnLoad' value='Load' onclick='loadFile();'>
+					</fieldset>
+				</form>
+				<div id=details></div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="index.js"></script>
+</body>
+</html>

@@ -66,7 +66,7 @@ public class XMLSPGraphReader extends DefaultHandler {
                 Node stop = spGraph.getNode(Long.parseLong(curTags.get("end_node")));
                 for (Edge e: ((SPGraph.NodePair) start).e.getOutEdges()) {
                     if (e.getId() == id) {
-                        new SimpleEdge(e, start, stop);
+                        new Edge(e, start, stop);
                     }
                 }
             }

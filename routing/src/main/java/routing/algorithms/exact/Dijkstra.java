@@ -5,8 +5,6 @@
  */
 package routing.algorithms.exact;
 
-import datastructure.TreeHeap;
-import datastructure.TreeHeap.TreeHeapElement;
 import routing.graph.*;
 import routing.graph.weights.WeightGetter;
 
@@ -19,8 +17,8 @@ import java.util.*;
 public class Dijkstra {
     private HashSet<Node> added = new HashSet<>();
     private final Tree tree = new Tree();
-    private TreeHeap<Tree.TreeNode> candidates = new TreeHeap<>();
-    private Tree.TreeNode lastAdded = null;
+    private PriorityQueue<TreeNodeWeight> candidates = new PriorityQueue<>(Comparator.comparing(TreeNodeWeight::getWeight));
+    private Tree.TreeNode lastTreeNode = null;
     private double lastDist = -1;
     private WeightGetter wg;
     private final boolean isSourceTree;
@@ -34,7 +32,7 @@ public class Dijkstra {
         this.isSourceTree = isSourceTree;
     }
     public void addStartNode(Node start) {
-        candidates.add(start.getId(), 0.0, new Tree.TreeNode(tree.getRoot(), start, null));
+        candidates.add(new TreeNodeWeight(new Tree.TreeNode(tree.getRoot(), start, null), 0));
     }
 
     public Tree getTree() {
@@ -44,10 +42,10 @@ public class Dijkstra {
     public Path getPath(Node stop) {
         Path out;
         if (!added.contains(stop)) {
-            if (extend(stop)) out = lastAdded.getPathFromRoot();
+            if (extend(stop)) out = lastTreeNode.getPathFromRoot();
             else return null;
         } else {
-            if (lastAdded.getNode() == stop) out = lastAdded.getPathFromRoot();
+            if (lastTreeNode.getNode() == stop) out = lastTreeNode.getPathFromRoot();
             else out = tree.getPath(stop.getId());
         }
         return out;
@@ -61,34 +59,45 @@ public class Dijkstra {
     }
     public boolean extend(Node stop, double stopDist) {
         if (!added.contains(stop)) {
-            Node last = null;
-            while(candidates.size()!=0 && lastDist<stopDist && (stop == null || (last!=stop))) {
-                TreeHeapElement<Tree.TreeNode> current = candidates.extractMin();
-                current.o.connect();
-                lastDist = current.weight;
-                last = current.o.getNode();
-                added.add(last);
-                lastAdded = current.o;
-                // Add all the neighbours of current to toAdd and their Id's to considered Id's
-                if (isSourceTree) {
-                    LinkedList<Edge> neighbours = lastAdded.getNode().getOutEdges();
-                    for (Edge e: neighbours) {
-                        if (!added.contains(e.getStop())) {
-                            Tree.TreeNode tentativeNode = new Tree.TreeNode(lastAdded, e.getStop(), e);
-                            candidates.add(e.getStop().getId(), lastDist+wg.getWeight(e), tentativeNode);
+            Node lastNode = null;
+            while(candidates.size()!=0 && lastDist<stopDist && (stop == null || (lastNode!=stop))) {
+                TreeNodeWeight lastTreeNodeWeight = candidates.poll();
+                if (added.add(lastTreeNodeWeight.tn.getNode())) {
+                    lastTreeNode = lastTreeNodeWeight.tn;
+                    lastTreeNodeWeight.tn.connect();
+                    lastNode = lastTreeNode.getNode();
+                    lastDist = lastTreeNodeWeight.weight;
+                    // Add all the neighbours of current to toAdd and their Id's to considered Id's
+                    if (isSourceTree) {
+                        LinkedList<Edge> neighbours = lastTreeNode.getNode().getOutEdges();
+                        for (Edge e : neighbours) {
+                            if (!added.contains(e.getStop())) {
+                                Tree.TreeNode tentativeNode = new Tree.TreeNode(lastTreeNode, e.getStop(), e);
+                                candidates.add(new TreeNodeWeight(tentativeNode, lastDist + wg.getWeight(e)));
+                            }
                         }
-                    }
-                } else {
-                    LinkedList<Edge> neighbours = lastAdded.getNode().getInEdges();
-                    for (Edge e: neighbours) {
-                        if (!added.contains(e.getStart())) {
-                            Tree.TreeNode tentativeNode = new Tree.TreeNode(lastAdded, e.getStart(), e);
-                            candidates.add(e.getStart().getId(), lastDist+wg.getWeight(e), tentativeNode);
+                    } else {
+                        LinkedList<Edge> neighbours = lastTreeNode.getNode().getInEdges();
+                        for (Edge e : neighbours) {
+                            if (!added.contains(e.getStart())) {
+                                Tree.TreeNode tentativeNode = new Tree.TreeNode(lastTreeNode, e.getStart(), e);
+                                candidates.add(new TreeNodeWeight(tentativeNode, lastDist + wg.getWeight(e)));
+                            }
                         }
                     }
                 }
             }
-            return (last == stop);
+            return (lastNode == stop);
         } return true;
+    }
+
+    private class TreeNodeWeight {
+        private Tree.TreeNode tn;
+        private double weight;
+        private TreeNodeWeight(Tree.TreeNode tn, double weight) {
+            this.tn = tn;
+            this.weight = weight;
+        }
+        private double getWeight() { return weight; }
     }
 }

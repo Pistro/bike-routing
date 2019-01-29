@@ -138,7 +138,7 @@ public class SPGraph extends Graph {
                 if (np0 == null) return;
                 if (pLen<=reach+epsilon) {
                     NodePair np1 = hyperNodes.addNodePair(n, lastEdge.getStop());
-                    new SimpleEdge(lastEdge, np0, np1);
+                    new Edge(lastEdge, np0, np1);
                 } else if (pLen-lastEdge.getLength()<=reach+epsilon) {
                     Set<Edge> edgeSet = new HashSet<>();
                     ArrayList<Edge> edgeList = new ArrayList<>();
@@ -153,7 +153,7 @@ public class SPGraph extends Graph {
                     for (Edge e: edgeList) {
                         if (pLen-added.get(e.getStart()).l>reach+epsilon && pLen-added.get(e.getStop()).l<=reach+epsilon) {
                             NodePair np1 = hyperNodes.getNodePair(e.getStop(), lastNode);
-                            new SimpleEdge(lastEdge, np0, np1);
+                            new Edge(lastEdge, np0, np1);
                         }
                     }
                 }
@@ -183,14 +183,14 @@ public class SPGraph extends Graph {
                                 LinkedList<Edge> toDecouple = new LinkedList<>();
                                 for (Edge e_in_alt : cur.getInEdges()) {
                                     if (((NodePair) e_in_alt.getStart()).e == nb_in) {
-                                        new SimpleEdge(e_in_alt, e_in_alt.getStart(), n_new);
+                                        new Edge(e_in_alt, e_in_alt.getStart(), n_new);
                                         toDecouple.add(e_in_alt);
                                     }
                                 }
                                 for (Edge e: toDecouple) e.decouple();
                                 for (Edge e_out : cur.getOutEdges()) {
                                     if (((NodePair) e_out.getStop()).e != nb_in) {
-                                        new SimpleEdge(e_out, n_new, e_out.getStop());
+                                        new Edge(e_out, n_new, e_out.getStop());
                                     }
                                 }
                             }
@@ -372,7 +372,7 @@ public class SPGraph extends Graph {
                 for (Edge e: n.getOutEdges()) {
                     NodePair np1 = nps.getNodePair((NodePair) e.getStop());
                     if (np1!=null) {
-                        new SimpleEdge(e, np0, np1);
+                        new Edge(e, np0, np1);
                     }
                 }
             }
@@ -411,7 +411,7 @@ public class SPGraph extends Graph {
                                 if (e0.getStart()==np0 && e0.getId()==e.getId()) add = false;
                             }
                             if (add) {
-                                new SimpleEdge(lastEdge, np0, np1);
+                                new Edge(lastEdge, np0, np1);
                             }
                         }
                     }
@@ -427,7 +427,7 @@ public class SPGraph extends Graph {
                             if (e0.getStart()==np0 && e0.getId()==e.getId()) add = false;
                         }
                         if (add) {
-                            new SimpleEdge(e, np0, np1);
+                            new Edge(e, np0, np1);
                         }
                     }
                 }
@@ -480,7 +480,7 @@ public class SPGraph extends Graph {
                                 if (e0.getStop() == np1 && e0.getId() == e.getId()) add = false;
                             }
                             if (add) {
-                                Edge e_new = SimpleEdge.getUncoupledEdge(lastEdge, np0, np1);
+                                Edge e_new = Edge.getUncoupledEdge(lastEdge, np0, np1);
                                 np0Out.add(e_new);
                             }
                         }
@@ -504,7 +504,7 @@ public class SPGraph extends Graph {
                             if (e0.getStop() == np1 && e0.getId() == e.getId()) add = false;
                         }
                         if (add) {
-                            Edge e_new = SimpleEdge.getUncoupledEdge(e, np0, np1);
+                            Edge e_new = Edge.getUncoupledEdge(e, np0, np1);
                             np0Out.add(e_new);
                         }
                     }

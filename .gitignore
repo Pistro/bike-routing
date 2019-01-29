@@ -1,10 +1,9 @@
-script.bat
-/source/graph
-/source/input
-/source/inter
-/source/output
+/data
+/source
+/graph
+/inter
+/output
 /examples
-/source_old
 /papers
 classes/
 /visualisation/showRoutes/fixtures

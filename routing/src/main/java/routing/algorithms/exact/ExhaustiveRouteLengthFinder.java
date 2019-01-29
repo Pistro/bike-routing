@@ -517,42 +517,27 @@ public class ExhaustiveRouteLengthFinder {
         private final double pMax;
         private double dMax;
         private double inter = 0;
-        private final double wSafe;
-        private final double wFast;
-        private final double wAttr;
         private ApproximateEdge(Path bestPath, double pMin, double pMax) {
-            super(0, bestPath.getStart(), bestPath.getEnd(), bestPath.getLength());
+            super(0, null, null, bestPath.getLength(), bestPath.getWFast(), bestPath.getWAttr(), bestPath.getWSafe());
+            setStart(bestPath.getStart());
+            setStop(bestPath.getEnd());
             this.pMin = pMin;
             this.pMax = pMax;
-            // Set shadow
-            LinkedList<Integer> sh = new LinkedList<>();
+            // Set intermediate nodes
+            int pos = -1;
             for (Edge e: bestPath.getEdges()) {
-                for (Integer i: e.shadow) sh.add(i);
+                pos += e.intermediateNodes.length+1;
             }
-            this.shadow = new int[sh.size()];
-            int pos = 0;
-            for (Integer i: sh) this.shadow[pos++] = i;
-            // wSafe, wAttr & wFast
-            double wS = 0, wA = 0, wF = 0;
+            intermediateNodes = new Node[pos];
+            pos = 0;
             for (Edge e: bestPath.getEdges()) {
-                wS += e.getWSafe();
-                wA += e.getWAttr();
-                wF += e.getWFast();
+                System.arraycopy(e.intermediateNodes, 0, intermediateNodes, pos, e.intermediateNodes.length);
+                pos += e.intermediateNodes.length;
+                if (pos<intermediateNodes.length) intermediateNodes[pos++] = e.getStop();
             }
-            this.wSafe = wS;
-            this.wAttr = wA;
-            this.wFast = wF;
         }
-
-        @Override
-        public double getWFast() { return wFast; }
-
-        @Override
-        public double getWAttr() { return wAttr; }
-
-        @Override
-        public double getWSafe() { return wSafe; }
     }
+
 
     private class NodeSchedule {
         private class NodeScheduleElement {

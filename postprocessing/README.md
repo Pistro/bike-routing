@@ -11,4 +11,4 @@ To keep the java virtual machine from spending too much time on garbage collecti
 The required heap size depends on the size of the dataset. For the French dataset, we recommend to allow up to 7GB of memory usage (-Xmx7G).
 
 ### Note
-The interference code requires an osm file that should allow to convert the routes in the results file to a sequance of nodes.
+The interference code requires an osm file that should allow to convert the routes in the results file to a sequence of nodes.

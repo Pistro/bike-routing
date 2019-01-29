@@ -1,8 +1,5 @@
 package routing.algorithms.heuristics;
 
-import jdk.nashorn.internal.ir.debug.JSONWriter;
-import org.json.simple.JSONObject;
-import routing.IO.JsonWriter;
 import routing.algorithms.candidateselection.*;
 import routing.graph.*;
 import routing.graph.weights.PoisonedWeightGetter;
@@ -50,6 +47,7 @@ public class RouteLengthFinder {
                 }
             }
         }
+        if (st==null) throw new IllegalArgumentException("No nodepair corresponding to id's (" + start.getId() + ", " + start.getId() + ") could be identified!");
         this.start = st;
         this.cs = cs;
         this.lambda = lambda;
@@ -67,7 +65,6 @@ public class RouteLengthFinder {
         forwardTime = (stop-go)/1000000;
         cs.initialize(cands);
         LinkedList<Candidate> candidates = cs.selectCandidates(nrAttempts);
-        //for (Candidate c: cands) if (((SPGraph.NodePair) c.node.getNode()).e.getId()==499088658L) candidates.add(c);
         LinkedList<Path> paths = new LinkedList<>();
         for (Candidate c: candidates) {
             Path forward = c.node.getPathFromRoot();
@@ -76,10 +73,30 @@ public class RouteLengthFinder {
             Path p = closeTour(forward, wg);
             stop = System.nanoTime();
             backwardTime += stop-go;
-            if (p!=null) paths.add(p);
+            if (p!=null) paths.add(toOrgGraphPath(p));
         }
         backwardTime /= 1000000;
         return paths;
+    }
+
+    public Path toOrgGraphPath(Path hyperPath) {
+        Path out = new Path(((SPGraph.NodePair) hyperPath.getStart()).s);
+        for (Edge e: hyperPath.getEdges()) {
+            Node edgeStart = ((SPGraph.NodePair) e.getStart()).e;
+            int edgeId = e.getId();
+            boolean translated = false;
+            for (Edge e2: edgeStart.getOutEdges()) {
+                if (e2.getId()==edgeId) {
+                    out.addEdge(e2);
+                    translated = true;
+                    break;
+                }
+            }
+            if (!translated) {
+                throw new IllegalArgumentException("Failed to map hyper edge to the original graph: " + edgeId);
+            }
+        }
+        return out;
     }
 
     private LinkedList<Candidate> forwardSearch() {

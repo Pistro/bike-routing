@@ -12,7 +12,6 @@ public abstract class Command {
         initialize(a);
     }
     public boolean loadNodes() { return true; }
-    public boolean loadFullEdges() { return false; }
     protected abstract void initialize(ArgParser a);
     public abstract void execute (Graph g);
     public abstract String getName();

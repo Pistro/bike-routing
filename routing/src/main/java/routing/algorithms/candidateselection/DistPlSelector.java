@@ -1,12 +1,8 @@
 package routing.algorithms.candidateselection;
 
 import datastructure.IntPair;
-import javafx.util.Pair;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import routing.algorithms.heuristics.DistanceCalculator;
 import routing.graph.Node;
-import routing.graph.SPGraph;
 
 import java.util.*;
 

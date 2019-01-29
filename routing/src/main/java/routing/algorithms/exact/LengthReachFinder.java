@@ -1,6 +1,5 @@
 package routing.algorithms.exact;
 
-import datastructure.TreeHeap;
 import routing.graph.*;
 import routing.graph.weights.WeightGetter;
 
@@ -46,6 +45,7 @@ public class LengthReachFinder {
     }
 
     public synchronized Node getNode() {
+        if (nextNode%1000==0) System.out.println(nextNode + "/" + nodesToProcess.length);
         if (nextNode<nodesToProcess.length) return nodesToProcess[nextNode++];
         else return null;
     }
@@ -62,7 +62,7 @@ public class LengthReachFinder {
             }
         }
 
-        // Calculate distances to all nodes further than lowerbound and closer upperbound from the neighbour of each node
+        // Calculate distances to all nodes further than lowerbound and closer than upperbound from the neighbour of each node
         private void processNode(Node n) {
             // Find the neighbour that is the most far from n
             double maxLength = 2*dMax + getFurthestNeighbour(n);
@@ -80,42 +80,50 @@ public class LengthReachFinder {
             return maxLength;
         }
 
-        private class TreeNodeLength {
+        private class TreeNodeWeightLength {
             private Tree.TreeNode tn;
             private double length;
-            private TreeNodeLength(Tree.TreeNode tn, double length) {
+            private double weight;
+            private TreeNodeWeightLength(Tree.TreeNode tn, double length, double weight) {
                 this.tn = tn;
                 this.length = length;
+                this.weight = weight;
             }
+            private double getWeight() { return weight; }
         }
 
-        Tree getNearbyNodes(Node n, double maxLength) {
-            HashMap<Node, LinkedList<Edge>> nearbyNodes = hyper.getSubgraphFast(n);
-            n = hyper.getNodePair(n, n);
+        Tree getNearbyNodes(Node nOrg, double maxLength) {
+            HashMap<Node, LinkedList<Edge>> nearbyNodes = hyper.getSubgraphFast(nOrg);
+            Node start = hyper.getNodePair(nOrg, nOrg);
+            if (start==null) start = new SPGraph.NodePair(0, nOrg, nOrg);
             Tree tree = new Tree();
-            TreeHeap<TreeNodeLength> candidates = new TreeHeap<>();
+            PriorityQueue<TreeNodeWeightLength> candidates = new PriorityQueue<>(Comparator.comparing(TreeNodeWeightLength::getWeight));
             HashSet<Node> toReach = new HashSet<>();
             HashSet<Node> addedNodes = new HashSet<>();
-            candidates.add(n.getId(), 0.0, new TreeNodeLength(new Tree.TreeNode(tree.getRoot(), n, null), 0.));
-            toReach.add(n);
+            HashMap<Node, Double> nodeToWeight = new HashMap<>();
+            candidates.add(new TreeNodeWeightLength(new Tree.TreeNode(tree.getRoot(), start, null), 0., 0.));
+            toReach.add(start);
+            nodeToWeight.put(start, 0.);
             while(!toReach.isEmpty()) {
-                TreeHeap.TreeHeapElement<TreeNodeLength> cur = candidates.extractMin();
-                Tree.TreeNode curTreeNode = cur.o.tn;
-                curTreeNode.connect();
+                TreeNodeWeightLength cur = candidates.poll();
+                Tree.TreeNode curTreeNode = cur.tn;
                 Node curNode = curTreeNode.getNode();
-                toReach.remove(curNode);
-                addedNodes.add(curNode);
-                LinkedList<Edge> neighbours = nearbyNodes.get(curNode);
-                if (neighbours == null) neighbours = curNode.getOutEdges();
-                for (Edge e: neighbours) {
-                    if (!addedNodes.contains(e.getStop())) {
-                        double newLength = cur.o.length+e.getLength();
-                        TreeNodeLength tentativeNode = new TreeNodeLength(new Tree.TreeNode(curTreeNode, e.getStop(), e), newLength);
-                        double newWeight = cur.weight+wg.getWeight(e);
-                        TreeHeap.TreeHeapElement<TreeNodeLength> replaced = candidates.add(e.getStop().getId(), newWeight, tentativeNode);
-                        if (replaced==null || replaced.o!=tentativeNode) {
-                            if (newLength>maxLength) toReach.remove(e.getStop());
-                            else toReach.add(e.getStop());
+                if (addedNodes.add(curNode)) {
+                    curTreeNode.connect();
+                    toReach.remove(curNode);
+                    LinkedList<Edge> neighbours = nearbyNodes.get(curNode);
+                    if (neighbours == null) neighbours = curNode.getOutEdges();
+                    for (Edge e : neighbours) {
+                        if (!addedNodes.contains(e.getStop())) {
+                            double newWeight = cur.weight + wg.getWeight(e);
+                            Double oldWeight = nodeToWeight.get(e.getStop());
+                            if (oldWeight == null || oldWeight>newWeight) {
+                                double newLength = cur.length + e.getLength();
+                                nodeToWeight.put(e.getStop(), newWeight);
+                                candidates.add(new TreeNodeWeightLength(new Tree.TreeNode(curTreeNode, e.getStop(), e), newLength, newWeight));
+                                if (newLength > maxLength) toReach.remove(e.getStop());
+                                else toReach.add(e.getStop());
+                            }
                         }
                     }
                 }

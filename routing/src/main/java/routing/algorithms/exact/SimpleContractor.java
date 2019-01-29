@@ -1,7 +1,6 @@
 package routing.algorithms.exact;
 
 import routing.graph.Edge;
-import routing.graph.FullEdge;
 import routing.graph.Graph;
 import routing.graph.Node;
 
@@ -15,7 +14,7 @@ import java.util.LinkedList;
  */
 public class SimpleContractor {
     public boolean loops = true;
-    private LinkedList <FullEdge> newEdges = new LinkedList<>();
+    private LinkedList <Edge> newEdges = new LinkedList<>();
     public SimpleContractor(Graph g) {
         contract(g);
     }
@@ -32,10 +31,10 @@ public class SimpleContractor {
                 }
             }
             if (current.getInEdges().size() == 1 && current.getOutEdges().size() == 1) {
-                FullEdge ei = (FullEdge) current.getInEdges().get(0);
-                FullEdge eo = (FullEdge) current.getOutEdges().get(0);
+                Edge ei = current.getInEdges().get(0);
+                Edge eo = current.getOutEdges().get(0);
                 if (ei != eo) {
-                    FullEdge e_new = FullEdge.join(ei, eo);
+                    Edge e_new = Edge.join(ei, eo);
                     newEdges.add(e_new);
                     ei.decouple();
                     eo.decouple();
@@ -44,25 +43,25 @@ public class SimpleContractor {
                     if (scheduled.add(e_new.getStop())) toDo.add(e_new.getStop());
                 }
             } else if (current.getInEdges().size() == 2 && current.getOutEdges().size() == 2) {
-                FullEdge ei1 = (FullEdge) current.getInEdges().get(0);
+                Edge ei1 = current.getInEdges().get(0);
                 Node ni1 = ei1.getStart();
-                FullEdge ei2 = (FullEdge) current.getInEdges().get(1);
+                Edge ei2 = current.getInEdges().get(1);
                 Node ni2 = ei2.getStart();
-                FullEdge eo1 = (FullEdge) current.getOutEdges().get(0);
+                Edge eo1 = current.getOutEdges().get(0);
                 Node no1 = eo1.getStop();
-                FullEdge eo2 = (FullEdge) current.getOutEdges().get(1);
+                Edge eo2 = current.getOutEdges().get(1);
                 Node no2 = eo2.getStop();
                 // Check whether simple contraction is possible
                 if (((ni1 == no1 && ni2 == no2) || (ni1 == no2 && ni2 == no1)) && ni1 != current && ni2 != current) {
-                    FullEdge en1, en2;
+                    Edge en1, en2;
                     if (ni1 == no1) {
-                        en1 = FullEdge.join(ei1, eo2);
-                        if (ei1.getId()==eo1.getId() && eo2.getId()==ei2.getId()) en2 = FullEdge.join(en1.getId(), ei2, eo1);
-                        else en2 = FullEdge.join(en1.getId(), ei2, eo1);
+                        en1 = Edge.join(ei1, eo2);
+                        if (ei1.getId()==eo1.getId() && eo2.getId()==ei2.getId()) en2 = Edge.join(ei2, eo1);
+                        else en2 = Edge.join(ei2, eo1);
                     } else {
-                        en1 = FullEdge.join(ei1, eo1);
-                        if (ei1.getId()==eo2.getId() && eo1.getId()==ei2.getId()) en2 = FullEdge.join(en1.getId(), ei2, eo2);
-                        else en2 = FullEdge.join(ei2, eo2);
+                        en1 = Edge.join(ei1, eo1);
+                        if (ei1.getId()==eo2.getId() && eo1.getId()==ei2.getId()) en2 = Edge.join(ei2, eo2);
+                        else en2 = Edge.join(ei2, eo2);
                     }
                     newEdges.add(en1);
                     newEdges.add(en2);
@@ -76,12 +75,12 @@ public class SimpleContractor {
                 }
             }
         }
-        for (Iterator<FullEdge> it = newEdges.listIterator(); it.hasNext(); ) {
+        for (Iterator<Edge> it = newEdges.listIterator(); it.hasNext(); ) {
             Edge current = it.next();
             if (current.getStart() == null) it.remove();
         }
     }
-    public LinkedList<FullEdge> getNewEdges() {
+    public LinkedList<Edge> getNewEdges() {
         return newEdges;
     }
 }

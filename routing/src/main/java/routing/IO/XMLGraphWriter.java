@@ -1,16 +1,12 @@
 package routing.IO;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-import javafx.util.Pair;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import routing.graph.Edge;
-import routing.graph.FullEdge;
-import routing.graph.Graph;
+import routing.graph.Node;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.util.*;
 
 /**
@@ -18,14 +14,15 @@ import java.util.*;
  */
 public class XMLGraphWriter extends DefaultHandler {
     private Set<Long> nodeWhiteList = null;
-    private LinkedList<FullEdge> newWays = new LinkedList<>();
+    private Set<Integer> wayWhiteList = null;
+    private LinkedList<Edge> newWays = new LinkedList<>();
     private HashMap<Long, HashMap<String, String>> nodeAttrUpdates = new HashMap<>();
     private HashMap<Long, HashMap<String, String>> nodeTagUpdates = new HashMap<>();
     private HashMap<Integer, HashMap<String, String>> wayAttrUpdates = new HashMap<>();
     private HashMap<Integer, HashMap<String, String>> wayTagUpdates = new HashMap<>();
-    private HashMap<String, String> curAttrs = new HashMap<String, String>();
-    private HashMap<String, String> curTags = new HashMap<String, String>();
-    private ArrayList<Integer> curWays = new ArrayList<Integer>();
+    private HashMap<String, String> curAttrs = new HashMap<>();
+    private HashMap<String, String> curTags = new HashMap<>();
+    private LinkedList<Long> curNodeIds = new LinkedList<>();
     private boolean inSmallElement = false;
 
     private XMLWriter xmlWr;
@@ -35,6 +32,9 @@ public class XMLGraphWriter extends DefaultHandler {
     public void setNodeWhiteList(Set<Long> whiteList) {
         this.nodeWhiteList = whiteList;
     }
+    public void setWayWhiteList(Set<Integer> whiteList) {
+        this.wayWhiteList = whiteList;
+    }
     public void setNodeAttrUpdates(HashMap<Long, HashMap<String, String>> updates) { this.nodeAttrUpdates = updates; }
     public void setNodeTagUpdates(HashMap<Long, HashMap<String, String>> updates) {
         this.nodeTagUpdates = updates;
@@ -43,7 +43,7 @@ public class XMLGraphWriter extends DefaultHandler {
     public void setWayTagUpdates(HashMap<Integer, HashMap<String, String>> updates) {
         this.wayTagUpdates = updates;
     }
-    public void setNewWays(LinkedList<FullEdge> newWays) {
+    public void setNewWays(LinkedList<Edge> newWays) {
         this.newWays = newWays;
     }
 
@@ -63,21 +63,21 @@ public class XMLGraphWriter extends DefaultHandler {
             inSmallElement = true;
             curAttrs.clear();
             curTags.clear();
-            curWays.clear();
+            curNodeIds.clear();
             int nrAttrs = attrs.getLength();
             for (int i = 0; i<nrAttrs; i++) curAttrs.put(attrs.getQName(i), attrs.getValue(i));
         } else if (qName.equals("way")) {
             inSmallElement = true;
             curAttrs.clear();
             curTags.clear();
-            curWays.clear();
+            curNodeIds.clear();
             int nrAttrs = attrs.getLength();
             for (int i = 0; i<nrAttrs; i++) curAttrs.put(attrs.getQName(i), attrs.getValue(i));
         } else if (inSmallElement) {
             if (qName.equals("tag")) {
                 curTags.put(attrs.getValue("k"), attrs.getValue("v"));
-            } else if (qName.equals("wy")) {
-                curWays.add(Integer.parseInt(attrs.getValue("ref")));
+            } else if (qName.equals("nd")) {
+                curNodeIds.add(Long.parseLong(attrs.getValue("ref")));
             }
         } else {
             xmlWr.startElement(qName, attrs);
@@ -105,17 +105,18 @@ public class XMLGraphWriter extends DefaultHandler {
                 curTags.putAll(wayTagUpdates.get(wayId));
             }
             keep = (nodeWhiteList==null)
-                    || (nodeWhiteList.contains(Long.parseLong(curTags.get("start_node"))) && nodeWhiteList.contains(Long.parseLong(curTags.get("end_node"))));
+                    || (nodeWhiteList.contains(curNodeIds.getFirst()) && nodeWhiteList.contains(curNodeIds.getLast()));
+            keep &= (wayWhiteList == null) || wayWhiteList.contains(wayId);
         }
         if (qName.equals("way") || qName.equals("node")) {
             inSmallElement = false;
             if (keep) {
                 xmlWr.startElement(qName, curAttrs);
                 HashMap<String, String> temp = new HashMap<String, String>();
-                for (Integer wayRef : curWays) {
-                    temp.put("ref", Integer.toString(wayRef));
-                    xmlWr.startElement("wy", temp);
-                    xmlWr.endElement("wy");
+                for (Long nodeId : curNodeIds) {
+                    temp.put("ref", Long.toString(nodeId));
+                    xmlWr.startElement("nd", temp);
+                    xmlWr.endElement("nd");
                 }
                 temp.clear();
                 for (Map.Entry<String, String> en: curTags.entrySet()) {
@@ -127,20 +128,15 @@ public class XMLGraphWriter extends DefaultHandler {
                 xmlWr.endElement(qName);
             }
         } else if (qName.equals("osm")) {
-            HashMap<Integer, Pair<FullEdge, Boolean>> idToEdgeOneWay = new HashMap<>();
-            for (FullEdge e: newWays) {
-                Pair<FullEdge, Boolean> present = idToEdgeOneWay.get(e.getId());
-                if (present==null) idToEdgeOneWay.put(e.getId(), new Pair<>(e, false));
-                else if (present.getKey().getStart()==e.getStop() && present.getKey().getStop()==e.getStart()) idToEdgeOneWay.put(e.getId(), new Pair<>(e, true));
-            }
-            for (Pair<FullEdge, Boolean> p : idToEdgeOneWay.values()) {
-                FullEdge e = p.getKey();
+            for (Edge e: newWays) {
                 curAttrs.clear();
                 curTags.clear();
                 curAttrs.put("id", Integer.toString(e.getId()));
-                curAttrs.putAll(e.getAttrs());
-                curTags.putAll(e.getTags());
-                curTags.put("bicycle_oneway", p.getValue()? "0" : "1");
+                curTags.put("bicycle_oneway", "1");
+                curTags.put("score_safe", Double.toString(e.getWSafe()));
+                curTags.put("score_attr", Double.toString(e.getWAttr()));
+                curTags.put("score_fast", Double.toString(e.getWFast()));
+                curTags.put("length", Double.toString(e.getLength()));
                 if (wayAttrUpdates.containsKey(e.getId())) {
                     curAttrs.putAll(wayAttrUpdates.get(e.getId()));
                 }
@@ -148,12 +144,18 @@ public class XMLGraphWriter extends DefaultHandler {
                     curTags.putAll(wayTagUpdates.get(e.getId()));
                 }
                 xmlWr.startElement("way", curAttrs);
-                HashMap<String, String> tmp = new HashMap<String, String>();
-                for (int i = 0; i<e.shadow.length; i++) {
-                    tmp.put("ref", Integer.toString(e.shadow[i]));
-                    xmlWr.startElement("wy", tmp);
-                    xmlWr.endElement("wy");
+                HashMap<String, String> tmp = new HashMap<>();
+                tmp.put("ref", Long.toString(e.getStart().getId()));
+                xmlWr.startElement("nd", tmp);
+                xmlWr.endElement("nd");
+                for (Node n: e.intermediateNodes) {
+                    tmp.put("ref", Long.toString(n.getId()));
+                    xmlWr.startElement("nd", tmp);
+                    xmlWr.endElement("nd");
                 }
+                tmp.put("ref", Long.toString(e.getStop().getId()));
+                xmlWr.startElement("nd", tmp);
+                xmlWr.endElement("nd");
                 tmp.clear();
                 for (Map.Entry<String, String> en: curTags.entrySet()) {
                     tmp.put("k", en.getKey());

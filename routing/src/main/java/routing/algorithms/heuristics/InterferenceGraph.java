@@ -99,7 +99,9 @@ public class InterferenceGraph {
         private final double p_max;
         private final double d_max;
         private ApproximateEdge(Path p, double pos) {
-            super(0, p.getEdges().getFirst().getStart(), p.getEnd(), p.getLength());
+            super(0, null, null, p.getLength(), 0, 0, 0);
+            setStart(p.getEdges().getFirst().getStart());
+            setStop(p.getEnd());
             this.edges = new LinkedList<>(p.getEdges());
             // dMax
             double d_max = 0;
@@ -118,15 +120,6 @@ public class InterferenceGraph {
             p_max = p_min;
             d_max = 0;
         }
-
-        @Override
-        public double getWFast() { return 0; }
-
-        @Override
-        public double getWAttr() { return 0; }
-
-        @Override
-        public double getWSafe() { return 0; }
     }
 
     public double getInterference() {

@@ -86,6 +86,27 @@ public class Path {
         }
         return out;
     }
+    public double getWSafe() {
+        double out = 0;
+        for (Edge e: edges) {
+            out += e.getWSafe();
+        }
+        return out;
+    }
+    public double getWAttr() {
+        double out = 0;
+        for (Edge e: edges) {
+            out += e.getWAttr();
+        }
+        return out;
+    }
+    public double getWFast() {
+        double out = 0;
+        for (Edge e: edges) {
+            out += e.getWFast();
+        }
+        return out;
+    }
     public double getWeight(WeightGetter g) { return getWeight(g, edges.size()); }
     public double getWeight(WeightGetter g, int pos) {
         double out = 0;
@@ -109,16 +130,15 @@ public class Path {
             routeTags.putAll(tags);
             route.put("tags", routeTags);
         }
-        Node st = (start instanceof SPGraph.NodePair)? ((SPGraph.NodePair) start).e : start;
-        route.put("startNode", st.getId());
-        JSONArray routeWays = new JSONArray();
+        JSONArray nodes = new JSONArray();
+        nodes.add(start.toJSON());
         for (Edge e : getEdges()) {
-            int [] shadow = e.shadow;
-            for (int i=0; i<shadow.length; i++) {
-                routeWays.add(shadow[i]);
+            for (Node n: e.intermediateNodes) {
+                nodes.add(n.toJSON());
             }
+            nodes.add(e.getStop().toJSON());
         }
-        route.put("ways", routeWays);
+        route.put("nodes", nodes);
         if (!markPoints.isEmpty()) {
             JSONArray mPoints = new JSONArray();
             for (Node n : markPoints) {

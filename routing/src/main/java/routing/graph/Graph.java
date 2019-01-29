@@ -2,10 +2,7 @@ package routing.graph;
 
 import routing.algorithms.heuristics.DistanceCalculator;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Created by Pieter on 29/11/2015.
@@ -24,7 +21,12 @@ public class Graph {
     }
 
     public Node addNode(Node n) {
-        return nodes.put(n.getId(), n);
+        Node out = nodes.get(n.getId());
+        if (out == null) {
+            nodes.put(n.getId(), n);
+            out = n;
+        }
+        return out;
     }
 
     public Node getNode(Long id) {
@@ -41,6 +43,14 @@ public class Graph {
             out += en.getValue().getInEdges().size();
         }
         return out;
+    }
+
+    public Set<Edge> getEdges() {
+        HashSet<Edge> edges = new HashSet<>();
+        for (Node n: nodes.values()) {
+            edges.addAll(n.getOutEdges());
+        }
+        return edges;
     }
 
     public HashMap<Long, Node> getNodes() {
@@ -101,7 +111,7 @@ public class Graph {
                 for (Edge e: n.getOutEdges()) {
                     Node n1 = out.getNode(e.getStop().getId());
                     if (n1!=null) {
-                        new SimpleEdge(e, n0, n1);
+                        new Edge(e, n0, n1);
                     }
                 }
             }

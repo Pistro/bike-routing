@@ -136,26 +136,20 @@ public class Tree {
             routeTags.putAll(tags);
             tree.put("tags", routeTags);
         }
-        JSONArray treeWays = new JSONArray();
-        HashSet<Integer> addedWays = new HashSet<>();
-        LinkedList<Edge> edges = getEdges();
-        for (Edge e : edges) {
-            int [] shadow = e.shadow;
-            for (int i=0; i<shadow.length; i++) {
-                if (addedWays.add(shadow[i]))
-                    treeWays.add(shadow[i]);
-            }
+        JSONArray treeEdges = new JSONArray();
+        for (Edge e : getEdges()) {
+            treeEdges.add(e.toJSON());
         };
-        tree.put("ways", treeWays);
-        JSONArray treeStarts = new JSONArray();
+        tree.put("edges", treeEdges);
+        JSONArray roots = new JSONArray();
         for (TreeNode r : root.getChildren()) {
             Node n = r.getNode();
             if (n!=null) {
-                if (n instanceof SPGraph.NodePair) treeStarts.add(((SPGraph.NodePair) n).e.getId());
-                else treeStarts.add(n.getId());
+                if (n instanceof SPGraph.NodePair) roots.add(((SPGraph.NodePair) n).e.getId());
+                else roots.add(n.getId());
             }
         }
-        tree.put("starts", treeStarts);
+        tree.put("roots", roots);
         trees.add(tree);
     }
 }

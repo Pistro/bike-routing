@@ -2,14 +2,9 @@ package routing.algorithms.candidateselection;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import routing.IO.JsonWriter;
-import routing.graph.Edge;
 import routing.graph.Node;
 import routing.graph.SPGraph;
-import routing.graph.Tree;
-import sun.awt.image.ImageWatched;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**

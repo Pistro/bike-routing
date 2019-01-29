@@ -1,10 +1,9 @@
 package routing.main.command;
 
-import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import routing.IO.XMLGraphWriter;
-import routing.algorithms.candidateselection.DistPlSelector;
 import routing.algorithms.exact.ComponentDiscovery;
+import routing.graph.Edge;
 import routing.graph.Graph;
 import routing.graph.Node;
 import routing.main.ArgParser;
@@ -36,8 +35,6 @@ public class FindLCC extends Command {
         in = Main.convertToFileURL(ap.getString("in"));
     }
 
-    public boolean loadNodes() { return false; }
-
     public void execute(Graph g) {
         System.out.println("Starting component detection (Tarjan)...");
         long start = System.currentTimeMillis();
@@ -47,7 +44,7 @@ public class FindLCC extends Command {
         System.out.println("Extracting largest connected component...");
         start = System.currentTimeMillis();
         int maxSize = 0;
-        Set<Node> largestConnectedComponent = new HashSet<Node>();
+        Set<Node> largestConnectedComponent = new HashSet<>();
         for (Set<Node> comp : components) {
             if (comp.size() > maxSize) {
                 maxSize = comp.size();
@@ -55,12 +52,20 @@ public class FindLCC extends Command {
             }
         }
         components.clear();
-        Set<Long> largestConnectedComponentIds = new HashSet<Long>();
-        for (Node n : largestConnectedComponent) largestConnectedComponentIds.add(n.getId());
-        largestConnectedComponent.clear();
+        Set<Long> largestConnectedComponentIds = new HashSet<>();
+        for (Node n: largestConnectedComponent) {
+            largestConnectedComponentIds.add(n.getId());
+            for (Edge e: n.getOutEdges()) {
+                if (largestConnectedComponent.contains(e.getStop())) {
+                    for (Node n2: e.intermediateNodes)
+                        largestConnectedComponentIds.add(n2.getId());
+                }
+            }
+        }
         stop = System.currentTimeMillis();
         System.out.println("Largest connected component finished. Extraction time: " + 1.0 * (stop - start) / 1000 + "s");
-        System.out.println("Original graph order: " + g.getNodes().size() + ", largest conn. comp. order: " + largestConnectedComponentIds.size() + ", fraction: " + ((float) largestConnectedComponentIds.size() / g.getNodes().size()));
+        System.out.println("Original graph order: " + g.getNodes().size() + ", largest conn. comp. order: " + largestConnectedComponent.size() + ", fraction: " + ((float) largestConnectedComponent.size() / g.getNodes().size()));
+        largestConnectedComponent.clear();
         System.out.println("Writing largest connected component to '" + out + "'...");
         try {
             XMLReader xmlReader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();

@@ -46,4 +46,4 @@ Example code on how to achieve this is provided in 'extract_region.py'.
 
 The osm2graph repository contains a html file which allows to visualise the json file. Note that the visualisation will only draw ways when the number of on-screen ways is small, so you may need to zoom in before anything appears on the map.
 
-![Visualisation of the 'score_attr_norm' attribute for a part of the city of Ghent, Belgium](doc/score_attr_norm_visualisation.png)
+![Visualisation of the 'score_attr_norm' attribute for a part of the city of Ghent, Belgium](doc/score_attr_norm_visualisation.PNG)

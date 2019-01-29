@@ -18,4 +18,3 @@ target/
 *.json
 *.eps
 .ipynb_checkpoints/
-*.PNG

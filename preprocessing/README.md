@@ -3,7 +3,7 @@
  - Osmosis: This program is used to extract information on different kinds of features from the osm data. The executable should be added to your PATH variable.
 	- Windows: Download the latest version [here](http://wiki.openstreetmap.org/wiki/Osmosis/Quick_Install_(Windows)), unzip it and add the bin subfolder to your path. It may be necessary to open the osmosis.bat file and change PLEXUS_CP so that it matches the attached plexus jar in lib\default.
 	- [Other](http://wiki.openstreetmap.org/wiki/Osmosis/Installation)
- - Osm2graph: This program matches features from one or more osm data sources and converts the osm representation into a graph representation. Requirements of osm2graph and additional info can be found on [this page](https://github.com/Pistro/osm2graph).
+ - Osm2graph: This program matches features from one or more osm data sources and converts the osm representation into a graph representation. Requirements of osm2graph and additional info can be found on [this page](https://github.com/Pistro/osm2graph). You should compile the project into an executable jar, or alternatively, you may download the .jar file from the [release page](https://github.com/Pistro/osm2graph/releases). The .jar file should be placed into this folder. 
  - Python: Python scripts are used to coordinate the other programs, and to combine the extracted features into various weights.
  
 ## Input data
@@ -17,7 +17,7 @@ The 'collect_info.py' script will call osmosis and osm2graph.jar (which should b
   - regionName_forest_way.osm: This file contains all forests in the region. It is used for checking whether a road passes through a forest. This file is of no use after the preprocessing step.
  - regionName_water.osm: This file contains all waterways, lakes and reservoirs in the region. It is used for checking whether a road passes is close to water. This file is of no use after the preprocessing step.
 
-All this information is combined into a single osm file, which contains the entire road network of the region, and where the roads have some extra tags, describing their proximity to poi's, forests, busy ways or waterways.
+All this information is combined into a single .osm file, which contains the entire road network of the region, and where the roads have some extra tags, describing their proximity to poi's, forests, busy ways or waterways.
 
 You can execute this script by opening a shell and running: `python collect_info.py`. Before executing this command however, you should open the script file and check the last few lines. The following arguments must be provided:
 - 'infile' should provide the path of the input .osm.pbf file
@@ -41,9 +41,9 @@ The script is executed by opening a shell and running: `python assign_weights.py
 ## Optional: Visualising & exploring the assigned scores
 In order to get a better understanding of which roads score well with regards to certain scores and compare roads, the scores can be visualised.
 
-Attempting to visualize all ways in a country-sized region is very compute intensive, and also does not result in an informative figure. Hence, before converting the osm file into a json file which can be visualized in the browser (which can be achieved with osm2graph), osmosis is used to extract a smaller city-sized rectangular region.
+Attempting to visualize all ways in a country-sized region is very compute intensive, and also does not result in an informative figure. Hence, before converting the .osm file into a .json file which can be visualized in the browser (which can be achieved with osm2graph), osmosis is used to extract a smaller city-sized rectangular region.
 Example code on how to achieve this is provided in 'extract_region.py'.
 
-The [osm2graph repository](https://github.com/Pistro/osm2graph) contains a html file which allows to visualise the json file. Note that the visualisation will only draw ways when the number of on-screen ways is small, so you may need to zoom in before anything appears on the map.
+The [osm2graph repository](https://github.com/Pistro/osm2graph) contains a .html file which allows to visualise the .json file. Note that the visualisation will only draw ways when the number of on-screen ways is small, so you may need to zoom in before anything appears on the map.
 
 ![Visualisation of the 'score_attr_norm' attribute for a part of the city of Ghent, Belgium](doc/score_attr_norm_visualisation.PNG)

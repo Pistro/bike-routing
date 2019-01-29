@@ -44,6 +44,6 @@ In order to get a better understanding of which roads score well with regards to
 Attempting to visualize all ways in a country-sized region is very compute intensive, and also does not result in an informative figure. Hence, before converting the osm file into a json file which can be visualized in the browser (which can be achieved with osm2graph), osmosis is used to extract a smaller city-sized rectangular region.
 Example code on how to achieve this is provided in 'extract_region.py'.
 
-The osm2graph repository contains a html file which allows to visualise the json file. Note that the visualisation will only draw ways when the number of on-screen ways is small, so you may need to zoom in before anything appears on the map.
+The [osm2graph repository](https://github.com/Pistro/osm2graph) contains a html file which allows to visualise the json file. Note that the visualisation will only draw ways when the number of on-screen ways is small, so you may need to zoom in before anything appears on the map.
 
 ![Visualisation of the 'score_attr_norm' attribute for a part of the city of Ghent, Belgium](doc/score_attr_norm_visualisation.PNG)
